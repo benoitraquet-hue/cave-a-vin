@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Ma Cave à Vin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Crimson+Pro:wght@300;400;500&display=swap" rel="stylesheet">
+{% raw %}
+<style>
+:root{
+  --burg:#5c1a1a;--burg2:#7a2828;--gold:#c9a84c;--gold2:#e2c97e;
+  --cream:#f5efe6;--cream2:#ede3d3;--dark:#1a0f0f;--muted:#8a6a6a;--pret:#4caf70;
+  --rouge-dark:#2d0808;--rouge-mid:#4a1010;--rouge-border:rgba(200,60,60,.55);
+  --blanc-dark:#1e1b08;--blanc-mid:#2e280e;--blanc-border:rgba(210,190,80,.5);
+  --rose-dark:#2a0c18;--rose-mid:#3e1428;--rose-border:rgba(210,110,150,.5);
+  --champ-dark:#1e1a08;--champ-mid:#2c2510;--champ-border:rgba(210,180,60,.5);
+  --porto-dark:#180805;--porto-mid:#28100a;--porto-border:rgba(160,70,30,.55);
+  --frigo-bg:#0a1a2a;--frigo-border:rgba(80,160,220,.35);--frigo-slot:#0e2035;
+  --header-h:56px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Crimson Pro',Georgia,serif;font-size:17px;background:var(--dark);color:var(--cream);overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(92,26,26,.28) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(92,26,26,.18) 0%,transparent 55%);pointer-events:none;z-index:0}
+
+/* HEADER */
+header{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(26,15,15,.96);backdrop-filter:blur(14px);border-bottom:1px solid rgba(201,168,76,.25);padding:0 1.2rem;display:flex;align-items:center;gap:.75rem;height:var(--header-h);box-shadow:0 2px 20px rgba(0,0,0,.4)}
+.header-title{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--gold);flex:1;white-space:nowrap}
+.header-title span{font-style:italic;color:var(--gold2)}
+.nav-tabs{display:flex;gap:.2rem;flex-shrink:0}
+.nav-tab{padding:.38rem .8rem;background:none;border:none;cursor:pointer;color:var(--muted);font-family:'Crimson Pro',serif;font-size:1rem;border-radius:6px;transition:all .2s;white-space:nowrap}
+.nav-tab:hover{color:var(--cream);background:rgba(255,255,255,.07)}
+.nav-tab.active{color:var(--gold);background:rgba(201,168,76,.12)}
+
+main{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:calc(var(--header-h) + 1.2rem) 1rem 4rem}
+.view{display:none}.view.active{display:block}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.8rem;margin-bottom:1.6rem}
+.stat-card{background:rgba(255,255,255,.05);border:1px solid rgba(201,168,76,.18);border-radius:11px;padding:1rem .9rem;text-align:center;transition:transform .2s}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-value{font-family:'Playfair Display',serif;font-size:2rem;color:var(--gold);display:block;line-height:1.1}
+.stat-label{font-size:.85rem;color:var(--muted);margin-top:.25rem;letter-spacing:.04em;text-transform:uppercase}
+.stat-card.alert .stat-value{color:#80e8a0}
+.stat-card.frigo .stat-value{color:#60c0ff}
+.stat-card.special .stat-value{color:#e8b0ff;font-size:1.3rem}
+.bar-row{margin-bottom:.45rem}
+.bar-row .bar-label{display:flex;justify-content:space-between;font-size:.95rem;margin-bottom:.2rem}
+.bar-track{background:rgba(255,255,255,.07);border-radius:4px;height:5px}
+.bar-fill{height:100%;border-radius:4px;border:1px solid rgba(201,168,76,.2);transition:width .5s}
+.stats-section{margin-top:1.2rem}
+.stats-section-title{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--gold2);margin-bottom:.7rem;border-bottom:1px solid rgba(201,168,76,.2);padding-bottom:.3rem}
+.stats-two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:600px){.stats-two-col{grid-template-columns:1fr}}
+.stat-highlight{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:.8rem .9rem;display:flex;flex-direction:column;gap:.2rem}
+.stat-highlight-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.stat-highlight-value{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--cream)}
+.stat-highlight-sub{font-size:.75rem;color:var(--muted)}
+.couleur-pie{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+.couleur-pill{display:flex;align-items:center;gap:.35rem;background:rgba(255,255,255,.05);border-radius:20px;padding:.3rem .65rem;font-size:.8rem}
+.decade-bars{margin-top:.4rem}
+
+/* INVENTAIRE */
+.inv-layout{display:flex;gap:1.2rem;align-items:flex-start}
+.inv-left{flex:1;min-width:0}
+.inv-right{width:340px;flex-shrink:0;position:sticky;top:calc(var(--header-h) + 1.2rem)}
+.vin-panel{background:#1e0e0e;border:1px solid rgba(201,168,76,.3);border-radius:13px;overflow:hidden;animation:panelIn .22s ease}
+@keyframes panelIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
+.vin-panel-header{padding:.9rem 1.1rem .65rem;border-bottom:1px solid rgba(201,168,76,.15)}
+.vin-panel-domaine{font-family:'Playfair Display',serif;font-size:1.08rem;color:var(--gold);line-height:1.25}
+.vin-panel-appel{font-size:.88rem;color:var(--muted);margin-top:.15rem}
+.vin-panel-body{padding:.8rem 1.1rem;max-height:calc(100vh - var(--header-h) - 180px);overflow-y:auto}
+.vin-info-row{display:flex;justify-content:space-between;align-items:baseline;padding:.22rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.88rem}
+.vin-info-row:last-child{border-bottom:none}
+.vin-info-label{color:var(--muted);font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;margin-right:.5rem}
+.vin-info-value{color:var(--cream);text-align:right}
+.vin-panel-actions{padding:.75rem 1.1rem;display:flex;gap:.6rem;border-top:1px solid rgba(201,168,76,.12)}
+.btn-panel-edit{flex:1;padding:.48rem;background:var(--burg);border:1px solid var(--gold);border-radius:8px;cursor:pointer;color:var(--gold);font-family:'Crimson Pro',serif;font-size:.9rem;transition:all .2s}
+.btn-panel-edit:hover{background:var(--burg2)}
+.btn-panel-close{padding:.48rem .8rem;background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:8px;cursor:pointer;color:var(--muted);font-family:'Crimson Pro',serif;font-size:.9rem;transition:all .2s}
+.btn-panel-close:hover{color:var(--cream)}
+
+/* Mini cave */
+.mini-cave{margin-top:.7rem;padding:.65rem .8rem;background:rgba(0,0,0,.25);border-radius:9px;border:1px solid rgba(201,168,76,.1)}
+.mini-cave-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.5rem}
+.mini-mur-wrap{overflow-x:auto}.mini-mur{display:flex;gap:5px;align-items:flex-start}
+.mini-col{display:flex;flex-direction:column;gap:3px}.mini-col-label{text-align:center;font-size:.58rem;color:var(--muted);margin-bottom:1px}
+.mini-bloc{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:#3a2020;border:1px solid #5a3535;border-radius:3px;padding:2px}
+.mini-loge{width:28px;height:22px;background:#1a0c0c;border-radius:2px}
+.mini-loge.rouge{background:var(--rouge-mid)}.mini-loge.blanc{background:var(--blanc-mid)}
+.mini-loge.rose{background:var(--rose-mid)}.mini-loge.champagne{background:var(--champ-mid)}
+.mini-loge.porto{background:var(--porto-mid)}
+.mini-loge.highlighted{background:var(--gold)!important;box-shadow:0 0 0 2px var(--gold2),0 0 8px rgba(201,168,76,.6)}
+
+/* FILTRES */
+.filters{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;align-items:center}
+.search-box{flex:1;min-width:170px;background:rgba(255,255,255,.07);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:.48rem .85rem;color:var(--cream);font-family:'Crimson Pro',serif;font-size:.95rem;outline:none;transition:border-color .2s}
+.search-box:focus{border-color:var(--gold)}.search-box::placeholder{color:var(--muted)}
+.filter-btn,.btn-add{padding:.48rem .85rem;background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.18);border-radius:8px;cursor:pointer;color:var(--cream);font-family:'Crimson Pro',serif;font-size:.86rem;transition:all .2s;white-space:nowrap}
+.btn-add{background:var(--burg);border-color:var(--gold);color:var(--gold)}
+.filter-btn:hover,.filter-btn.active{background:rgba(201,168,76,.18);border-color:var(--gold);color:var(--gold)}
+.btn-add:hover{background:var(--burg2)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:11px;border:1px solid rgba(201,168,76,.15)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:rgba(92,26,26,.5)}
+th{padding:.7rem .9rem;text-align:left;font-family:'Crimson Pro',serif;font-weight:500;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gold2);border-bottom:1px solid rgba(201,168,76,.2);cursor:pointer;white-space:nowrap;user-select:none}
+th:hover{color:var(--gold)}
+.sort-arrow{font-size:.7rem;margin-left:2px;color:var(--gold)}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.05);transition:background .15s;cursor:pointer}
+tbody tr:hover{background:rgba(201,168,76,.07)}
+tbody tr.active-row{background:rgba(201,168,76,.14)!important}
+tbody tr.row-pret{background:rgba(40,160,80,.10);outline:1px solid rgba(40,160,80,.18)}
+td{padding:.65rem .9rem;font-size:1.05rem;color:var(--cream)}
+td.muted{color:var(--muted);font-size:.95rem}
+.wine-icon{font-size:1.05rem;line-height:1}
+.badge-pret{background:rgba(40,160,80,.2);color:#80e8a0;padding:.2rem .5rem;border-radius:4px;font-size:.88rem;font-weight:500}
+.empty-state{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-style:italic}
+
+/* AUTOCOMPLETE */
+.ac-wrap{position:relative}
+.ac-list{position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:400;background:#1e0e0e;border:1px solid rgba(201,168,76,.35);border-radius:8px;max-height:200px;overflow-y:auto;display:none;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.ac-item{padding:.5rem .85rem;cursor:pointer;font-size:.92rem;transition:background .12s;border-bottom:1px solid rgba(255,255,255,.04)}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover{background:rgba(201,168,76,.18);color:var(--gold)}
+.ac-empty{padding:.5rem .85rem;font-size:.85rem;color:var(--muted);font-style:italic}
+
+/* CAVE */
+.cave-toolbar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.9rem;align-items:center}
+.mur-tabs{display:flex;gap:.5rem;flex-wrap:wrap}
+.mur-tab{padding:.42rem .95rem;background:rgba(255,255,255,.05);border:1px solid rgba(201,168,76,.2);border-radius:8px;color:var(--muted);cursor:pointer;font-family:'Crimson Pro',serif;font-size:.9rem;transition:all .2s}
+.mur-tab.active,.mur-tab:hover{background:rgba(201,168,76,.13);border-color:var(--gold);color:var(--gold)}
+.cave-search{flex:1;min-width:160px;background:rgba(255,255,255,.07);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:.42rem .8rem;color:var(--cream);font-family:'Crimson Pro',serif;font-size:.88rem;outline:none;transition:border-color .2s}
+.cave-search:focus{border-color:var(--gold)}.cave-search::placeholder{color:var(--muted)}
+.mur-label{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem}
+.couleur-legend{display:flex;gap:.55rem;flex-wrap:wrap;margin-bottom:.9rem;align-items:center}
+.legend-item{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:.76rem}
+.legend-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.mur-layout{display:flex;gap:8px;align-items:flex-start;overflow-x:auto;padding-bottom:1.5rem}
+.bloc-nums{display:flex;flex-direction:column;gap:12px;padding-top:32px;flex-shrink:0;width:28px}
+.bloc-num-item{font-family:'Playfair Display',serif;font-size:.7rem;color:var(--muted);text-align:center;display:flex;align-items:center;justify-content:center}
+.mur-cols{display:flex;gap:20px;flex-shrink:0}
+.beton-col{display:flex;flex-direction:column;gap:12px}
+.beton-col-title{text-align:center;font-size:.7rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;height:22px;display:flex;align-items:center;justify-content:center}
+.bloc-beton{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;background:#3a2020;border:2px solid #5a3535;border-radius:6px;padding:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 3px 10px rgba(0,0,0,.5)}
+
+/* LOGE */
+.loge{width:175px;height:118px;padding:7px 9px 6px;border-radius:3px;cursor:pointer;transition:filter .15s,box-shadow .2s;position:relative;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;border-left:3px solid transparent}
+.loge.vide{background:linear-gradient(145deg,#1c0e0e 0%,#140808 100%);border:none;cursor:default}
+.loge:not(.vide):hover{filter:brightness(1.18)}
+.loge.no-color{background:linear-gradient(145deg,#2a1818 0%,#1a0c0c 100%)}
+.loge.rouge{background:linear-gradient(145deg,var(--rouge-mid) 0%,var(--rouge-dark) 100%);border-left:3px solid var(--rouge-border)}
+.loge.blanc{background:linear-gradient(145deg,var(--blanc-mid) 0%,var(--blanc-dark) 100%);border-left:3px solid var(--blanc-border)}
+.loge.rose{background:linear-gradient(145deg,var(--rose-mid) 0%,var(--rose-dark) 100%);border-left:3px solid var(--rose-border)}
+.loge.champagne{background:linear-gradient(145deg,var(--champ-mid) 0%,var(--champ-dark) 100%);border-left:3px solid var(--champ-border)}
+.loge.porto{background:linear-gradient(145deg,var(--porto-mid) 0%,var(--porto-dark) 100%);border-left:3px solid var(--porto-border)}
+.loge.pret-boire{background:linear-gradient(145deg,#1a2e14 0%,#0e1e0a 100%)!important;border-left:3px solid rgba(70,200,110,.85)!important}
+.loge.search-highlight{box-shadow:0 0 0 3px var(--gold),0 0 18px rgba(201,168,76,.5)!important;filter:brightness(1.25)!important;z-index:2;position:relative}
+.loge.search-dim{filter:brightness(.38)!important}
+.loge-domaine{font-size:.73rem;font-weight:600;color:var(--cream);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.loge-appel{font-size:.64rem;color:rgba(245,239,230,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.loge-millesime{font-size:.63rem;color:var(--gold2);margin-top:1px}
+.loge-prix{font-size:.61rem;color:rgba(201,168,76,.65);margin-top:1px}
+.loge-qte{position:absolute;top:5px;right:6px;font-family:'Playfair Display',serif;font-size:.8rem;color:var(--gold);background:rgba(0,0,0,.55);padding:1px 5px;border-radius:3px;line-height:1.4}
+.loge-pret-badge{position:absolute;bottom:5px;right:5px;font-size:.55rem;color:var(--pret);background:rgba(0,0,0,.6);padding:1px 5px;border-radius:3px;font-weight:700;letter-spacing:.03em}
+.loge-bottles{display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;width:100%;margin-top:3px}
+.bottles-row{display:flex;gap:4px;align-items:center;justify-content:center}
+.bottle{width:13px;height:13px;border-radius:50%;flex-shrink:0}
+.bottle.empty{background:rgba(255,255,255,.1)!important;border:1px solid rgba(255,255,255,.15)!important;box-shadow:none!important}
+.bottle.rouge{background:radial-gradient(circle at 35% 35%,#e05050,#7a1515);border:1px solid rgba(220,90,90,.7);box-shadow:0 1px 4px rgba(200,30,30,.5)}
+.bottle.blanc{background:radial-gradient(circle at 35% 35%,#f5eeaa,#d4b840);border:1px solid rgba(240,220,90,.7);box-shadow:0 1px 4px rgba(210,190,50,.4)}
+.bottle.rose{background:radial-gradient(circle at 35% 35%,#f0a8c0,#c05878);border:1px solid rgba(230,140,170,.7);box-shadow:0 1px 4px rgba(210,100,140,.4)}
+.bottle.champagne{background:radial-gradient(circle at 35% 35%,#f5e090,#c8a030);border:1px solid rgba(240,210,80,.7);box-shadow:0 1px 4px rgba(210,180,50,.4)}
+.bottle.porto{background:radial-gradient(circle at 35% 35%,#a04020,#450e05);border:1px solid rgba(180,90,40,.7);box-shadow:0 1px 4px rgba(140,50,20,.5)}
+.bottle.default{background:radial-gradient(circle at 35% 35%,#d4b870,#8a5225);border:1px solid rgba(201,168,76,.6);box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.loge.pret-boire .bottle:not(.empty){box-shadow:0 0 6px 2px rgba(70,200,110,.45)!important}
+.loge.multi-vins{border-left:3px solid rgba(201,168,76,.8)!important;background:linear-gradient(145deg,#1a1408 0%,#120e04 100%)!important}
+.loge-multi-label{font-size:.7rem;color:var(--gold);font-weight:700;text-align:center;margin-bottom:2px}
+.multi-dots{display:flex;gap:3px;justify-content:center;flex-wrap:wrap;margin:2px 0}
+.multi-dot{width:8px;height:8px;border-radius:50%;border:1px solid rgba(255,255,255,.3)}
+/* Vivino button */
+.btn-vivino-open{width:100%;padding:.6rem;background:linear-gradient(135deg,rgba(126,15,30,.55),rgba(80,10,20,.7));border:1px solid rgba(200,50,60,.4);border-radius:8px;color:#f4c4c4;font-family:'Crimson Pro',serif;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;letter-spacing:.03em;transition:background .2s}
+.btn-vivino-open:hover{background:linear-gradient(135deg,rgba(160,20,40,.65),rgba(100,15,25,.8))}
+/* Vivino popup overlay */
+.vivino-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.75);align-items:center;justify-content:center}
+.vivino-overlay.open{display:flex}
+.vivino-modal{background:#1e0e0e;border:1px solid rgba(200,50,60,.4);border-radius:14px;width:min(95vw,700px);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 60px rgba(0,0,0,.8)}
+.vivino-header{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.1rem;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(126,15,30,.2)}
+.vivino-header h3{font-family:'Playfair Display',serif;color:#f4c4c4;margin:0;font-size:1.1rem}
+.vivino-close-btn{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;padding:.2rem .5rem;line-height:1}
+.vivino-search-bar{padding:.7rem 1rem;display:flex;gap:.5rem;border-bottom:1px solid rgba(255,255,255,.08)}
+.vivino-search-bar input{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:7px;color:var(--cream);padding:.45rem .8rem;font-size:.95rem}
+.vivino-search-bar button{padding:.45rem 1rem;background:rgba(200,50,60,.35);border:1px solid rgba(200,50,60,.5);border-radius:7px;color:#f4c4c4;cursor:pointer;white-space:nowrap}
+.vivino-results{overflow-y:auto;flex:1;padding:.6rem}
+.vivino-result-item{display:flex;align-items:flex-start;gap:.8rem;padding:.7rem .9rem;border-radius:9px;cursor:pointer;transition:background .15s;border:1px solid transparent}
+.vivino-result-item:hover{background:rgba(255,255,255,.06);border-color:rgba(201,168,76,.2)}
+.vivino-result-item.selected{background:rgba(201,168,76,.08);border-color:rgba(201,168,76,.4)}
+.vivino-wine-info{flex:1}
+.vivino-wine-name{font-weight:600;color:var(--cream);font-size:.95rem}
+.vivino-wine-meta{font-size:.78rem;color:var(--muted);margin-top:.15rem}
+.vivino-wine-stats{font-size:.78rem;color:var(--gold2);margin-top:.2rem}
+.vivino-import-btn{padding:.45rem .9rem;background:rgba(80,180,100,.2);border:1px solid rgba(80,180,100,.4);border-radius:7px;color:#80e8a0;cursor:pointer;white-space:nowrap;font-size:.85rem}
+.vivino-status{text-align:center;padding:1.5rem;color:var(--muted);font-style:italic}
+/* Version footer */
+.app-version{position:fixed;bottom:.5rem;left:.7rem;font-size:.6rem;color:rgba(201,168,76,.35);letter-spacing:.05em;pointer-events:none;z-index:10}
+/* Popup multi */
+.popup-multi-vin{border-bottom:1px solid rgba(255,255,255,.07);padding:.55rem 0;display:flex;flex-direction:column;gap:.25rem}
+.popup-multi-vin:last-child{border-bottom:none}
+.popup-multi-domaine{font-size:.9rem;font-weight:600;color:var(--cream)}
+.popup-multi-detail{font-size:.78rem;color:var(--muted)}
+.popup-multi-actions{display:flex;gap:.4rem;margin-top:.35rem;flex-wrap:wrap}
+/* Badge place dispo dans dropdown */
+.emp-item-dispo{font-size:.62rem;color:#80e8a0;background:rgba(40,160,80,.15);border:1px solid rgba(70,200,110,.3);border-radius:3px;padding:1px 5px;margin-left:4px}
+.emp-item-semi{font-size:.62rem;color:var(--gold2);background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:3px;padding:1px 5px;margin-left:4px}
+/* Suggestion partage */
+.share-suggestion{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:.6rem .8rem;margin-top:.5rem;font-size:.82rem}
+.share-suggestion-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--gold2);margin-bottom:.4rem}
+.share-case-item{display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s;border-radius:4px;padding:.3rem .4rem}
+.share-case-item:last-child{border-bottom:none}
+.share-case-item:hover{background:rgba(201,168,76,.1)}
+
+/* POPUP CAVE */
+.loge-popup{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);z-index:150;background:#1e0e0e;border:1px solid rgba(201,168,76,.38);border-radius:13px;padding:1.1rem 1.4rem 1rem;width:calc(100% - 2rem);max-width:470px;box-shadow:0 8px 32px rgba(0,0,0,.65);animation:slideUp .2s ease}
+.popup-backdrop{display:none;position:fixed;inset:0;z-index:149;background:rgba(0,0,0,.55)}
+@media(max-width:900px){.popup-backdrop.open{display:block}}
+.popup-close-btn{display:none;width:100%;margin-top:.9rem;padding:.6rem;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.35);border-radius:8px;color:var(--gold);font-family:'Crimson Pro',serif;font-size:1rem;cursor:pointer;letter-spacing:.03em}
+.popup-close-btn:active{background:rgba(201,168,76,.25)}
+@media(max-width:900px){
+  .loge-popup,.frigo-popup{bottom:0;left:0;right:0;transform:none;width:100%;max-width:100%;border-radius:18px 18px 0 0;max-height:82vh;display:flex;flex-direction:column;padding:1.2rem 1.3rem .5rem}
+  .popup-scroll-inner{flex:1;overflow-y:auto;padding-bottom:.5rem}
+  .popup-close-btn{display:block}
+  .loge-popup-close{display:none}
+}@keyframes slideUp{from{transform:translateX(-50%) translateY(18px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.loge-popup-close{position:absolute;top:.65rem;right:.9rem;color:var(--muted);cursor:pointer;font-size:1rem}
+.popup-domaine{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold);margin-bottom:.3rem}
+.popup-detail{font-size:.88rem;color:var(--cream2);line-height:1.9}
+.popup-detail .lbl{color:var(--muted);font-size:.78rem}
+.popup-actions{margin-top:.8rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.sortir-nb{width:52px;background:rgba(255,255,255,.08);border:1px solid rgba(201,168,76,.3);border-radius:6px;padding:.32rem .5rem;color:var(--cream);font-family:'Crimson Pro',serif;font-size:.93rem;outline:none;text-align:center}
+.btn-sortir{padding:.38rem .85rem;background:rgba(180,70,20,.3);border:1px solid rgba(200,90,30,.5);border-radius:7px;color:#ffaa80;cursor:pointer;font-family:'Crimson Pro',serif;font-size:.85rem;transition:all .2s}
+.btn-sortir:hover{background:rgba(180,70,20,.55)}
+.btn-frigo{padding:.38rem .85rem;background:rgba(20,80,160,.3);border:1px solid rgba(60,140,220,.4);border-radius:7px;color:#80c8ff;cursor:pointer;font-family:'Crimson Pro',serif;font-size:.85rem;transition:all .2s}
+.btn-frigo:hover{background:rgba(20,80,160,.55)}
+.btn-edit-popup{padding:.38rem .8rem;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.28);border-radius:7px;color:var(--gold);cursor:pointer;font-family:'Crimson Pro',serif;font-size:.85rem;transition:all .2s}
+.btn-edit-popup:hover{background:rgba(201,168,76,.22)}
+
+/* ══ FRIGO ══ */
+.frigo-wrap{background:var(--frigo-bg);border:1px solid var(--frigo-border);border-radius:14px;padding:1.1rem 1.2rem;box-shadow:0 4px 24px rgba(0,0,0,.5),inset 0 1px 0 rgba(80,160,220,.15)}
+.frigo-title{font-family:'Playfair Display',serif;font-size:1.05rem;color:#80c8ff;margin-bottom:.4rem;display:flex;align-items:center;gap:.5rem}
+.frigo-subtitle{font-size:.74rem;color:rgba(128,200,255,.5);margin-bottom:.9rem;letter-spacing:.05em;text-transform:uppercase}
+.frigo-rangees{display:flex;flex-direction:column;gap:10px}
+.frigo-rangee{display:flex;gap:5px;align-items:center}
+.frigo-rangee-label{font-size:.68rem;color:rgba(128,200,255,.5);min-width:20px;text-align:center;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.08em}
+.frigo-slots{display:flex;gap:4px;flex-wrap:wrap}
+.frigo-slot{width:48px;height:42px;background:var(--frigo-slot);border:1px solid rgba(80,160,220,.2);border-radius:5px;cursor:pointer;transition:all .18s;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.frigo-slot.vide{cursor:default;opacity:.45}
+.frigo-slot:not(.vide):hover{border-color:rgba(80,160,220,.6);background:#12283d}
+.frigo-slot.rouge{border-color:var(--rouge-border);background:rgba(74,16,16,.5)}
+.frigo-slot.blanc{border-color:var(--blanc-border);background:rgba(46,40,14,.5)}
+.frigo-slot.rose{border-color:var(--rose-border);background:rgba(62,20,40,.5)}
+.frigo-slot.champagne{border-color:var(--champ-border);background:rgba(44,37,16,.5)}
+.frigo-slot.porto{border-color:var(--porto-border);background:rgba(40,16,10,.5)}
+.frigo-slot-qte{font-family:'Playfair Display',serif;font-size:.85rem;color:var(--gold);line-height:1}
+.frigo-slot-dom{font-size:.48rem;color:rgba(245,239,230,.6);text-align:center;line-height:1.2;overflow:hidden;max-height:22px;word-break:break-word;padding:0 2px}
+.frigo-slot-btl{font-size:.42rem;color:rgba(201,168,76,.6);text-align:center}
+
+/* Popup frigo */
+.frigo-popup{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);z-index:150;background:var(--frigo-bg);border:1px solid rgba(80,160,220,.5);border-radius:13px;padding:1.1rem 1.4rem 1rem;width:calc(100% - 2rem);max-width:470px;box-shadow:0 8px 32px rgba(0,0,0,.7);animation:slideUp .2s ease;overflow:visible}
+/* Panneau aperçu cave flottant - séparé de la popup frigo */
+#frigo-cave-preview{position:fixed;z-index:151;background:rgba(12,18,28,.97);border:1px solid rgba(201,168,76,.3);border-radius:11px;padding:.8rem 1rem;box-shadow:0 8px 28px rgba(0,0,0,.7);display:none;animation:slideUp .18s ease}
+@media(min-width:901px){#frigo-cave-preview{bottom:1.2rem;left:calc(50% + 250px);max-width:320px}}
+@media(max-width:900px){#frigo-cave-preview{bottom:calc(1.2rem + 220px);left:50%;transform:translateX(-50%);max-width:calc(100% - 2rem)}}
+#frigo-cave-preview .preview-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.5rem}
+
+/* ALERTES */
+.alertes-section-title{font-family:'Playfair Display',serif;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .85rem;border-radius:8px;margin-bottom:.5rem;margin-top:.9rem}
+.alertes-section-title:first-child{margin-top:0}
+.alertes-section-title.pret{color:#80e8a0;background:rgba(40,160,80,.1);border-left:3px solid rgba(70,200,110,.6)}
+.alertes-list{display:flex;flex-direction:column;gap:.55rem;margin-bottom:.3rem}
+.alerte-item{border-radius:10px;padding:.8rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;cursor:pointer;transition:background .2s}
+.alerte-item.pret{background:rgba(40,160,80,.08);border:1px solid rgba(70,200,110,.22)}
+.alerte-item.pret:hover{background:rgba(40,160,80,.18)}
+.alerte-info{flex:1}
+.alerte-domaine{font-family:'Playfair Display',serif;font-size:.96rem;color:var(--cream)}
+.alerte-app{color:var(--muted);font-size:.84rem}
+.alerte-date{text-align:right}
+.alerte-annee{font-family:'Playfair Display',serif;font-size:1.28rem;color:#80e8a0}
+.alerte-reste{font-size:.74rem;color:var(--muted)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(8,4,4,.78);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:calc(var(--header-h) + .8rem) 1rem 1rem;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:#1e0e0e;border:1px solid rgba(201,168,76,.3);border-radius:14px;padding:1.4rem;width:100%;max-width:520px;animation:mUp .22s ease;margin:auto}
+@keyframes mUp{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold);margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid rgba(201,168,76,.2)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.form-group{display:flex;flex-direction:column;gap:.25rem;position:relative}
+.form-group.full{grid-column:1/-1}
+label{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+label .req{color:var(--gold);font-size:.8rem;margin-left:2px}
+input,select,textarea{background:rgba(255,255,255,.07);border:1px solid rgba(201,168,76,.2);border-radius:7px;padding:.52rem .78rem;color:var(--cream);font-family:'Crimson Pro',serif;font-size:.95rem;outline:none;transition:border-color .2s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+select option{background:#1e0e0e}
+textarea{resize:vertical;min-height:58px}
+.form-actions{display:flex;gap:.65rem;margin-top:1rem;justify-content:flex-end}
+.btn-save{padding:.52rem 1.3rem;background:var(--burg);border:1px solid var(--gold);border-radius:8px;color:var(--gold);cursor:pointer;font-family:'Crimson Pro',serif;font-size:.94rem;transition:all .2s}
+.btn-save:hover{background:var(--burg2)}
+.btn-cancel{padding:.52rem 1rem;background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:8px;color:var(--muted);cursor:pointer;font-family:'Crimson Pro',serif;font-size:.94rem;transition:all .2s}
+.btn-cancel:hover{color:var(--cream)}
+.btn-delete{padding:.52rem .95rem;background:transparent;border:1px solid rgba(200,60,60,.38);border-radius:8px;color:#e07070;cursor:pointer;font-family:'Crimson Pro',serif;font-size:.94rem;transition:all .2s;margin-right:auto}
+.btn-delete:hover{background:rgba(200,60,60,.15)}
+.section-sep{grid-column:1/-1;border-top:1px solid rgba(201,168,76,.15);padding-top:.55rem;margin-top:.1rem}
+.emp-slot{display:flex;gap:.5rem;align-items:center;margin-bottom:.45rem}
+.emp-slot select{flex:1}
+.emp-slot-label{font-size:.72rem;color:var(--gold);white-space:nowrap;min-width:70px;font-style:italic}
+.emp-slot-info{font-size:.7rem;color:var(--muted);margin-top:.1rem;font-style:italic;margin-left:.2rem}
+
+/* Aperçu emplacement en temps réel */
+.emp-preview{margin-top:.6rem;background:rgba(0,0,0,.25);border-radius:8px;border:1px solid rgba(201,168,76,.12);padding:.6rem .75rem;display:none}
+.emp-preview-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.45rem}
+.emp-preview .mini-mur{gap:4px}.emp-preview .mini-bloc{padding:2px;gap:2px}
+.emp-preview .mini-loge{width:24px;height:20px}
+
+/* CAVE ONGLETS */
+.mur-tabs{display:flex;gap:.5rem;flex-wrap:wrap}
+.mur-tab{padding:.42rem .95rem;background:rgba(255,255,255,.05);border:1px solid rgba(201,168,76,.2);border-radius:8px;color:var(--muted);cursor:pointer;font-family:'Crimson Pro',serif;font-size:.9rem;transition:all .2s}
+.mur-tab.active,.mur-tab:hover{background:rgba(201,168,76,.13);border-color:var(--gold);color:var(--gold)}
+
+/* Frigo slots encore plus grands */
+.frigo-slot{width:88px!important;height:72px!important;background:var(--frigo-slot);border:1px solid rgba(80,160,220,.2);border-radius:6px;cursor:pointer;transition:all .18s;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;gap:2px}
+.frigo-slot-qte{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--gold);line-height:1}
+.frigo-slot-dom{font-size:.62rem;color:rgba(245,239,230,.8);text-align:center;line-height:1.3;overflow:hidden;max-height:32px;word-break:break-word;padding:0 4px;font-weight:500}
+.frigo-slot-btl{font-size:.56rem;color:rgba(201,168,76,.8);text-align:center}
+
+/* Custom dropdown emplacement avec hover-preview */
+.emp-dropdown{position:relative}
+.emp-dropdown-btn{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(201,168,76,.2);border-radius:7px;padding:.52rem .78rem;color:var(--cream);font-family:'Crimson Pro',serif;font-size:.9rem;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:border-color .2s}
+.emp-dropdown-btn:hover,.emp-dropdown-btn.open{border-color:var(--gold)}
+.emp-dropdown-btn .arrow{color:var(--muted);font-size:.7rem}
+.emp-dropdown-list{position:absolute;top:calc(100% + 3px);left:0;right:0;z-index:500;background:#1e0e0e;border:1px solid rgba(201,168,76,.3);border-radius:8px;max-height:200px;overflow-y:auto;display:none;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.emp-dropdown-list.open{display:block}
+.emp-dropdown-list.open-up{top:auto;bottom:calc(100% + 3px)}
+.emp-dropdown-item{padding:.45rem .78rem;cursor:pointer;font-size:.85rem;border-bottom:1px solid rgba(255,255,255,.04);transition:background .1s;display:flex;justify-content:space-between;align-items:center}
+.emp-dropdown-item:last-child{border-bottom:none}
+.emp-dropdown-item:hover,.emp-dropdown-item.selected{background:rgba(201,168,76,.18);color:var(--gold)}
+.emp-dropdown-item .emp-item-badge{font-size:.65rem;color:var(--muted)}
+.emp-dropdown-item.current{border-left:2px solid var(--gold)}
+/* Preview inline beside dropdown */
+.emp-slot-row{display:grid;grid-template-columns:1fr auto;gap:.6rem;align-items:start}
+.emp-slot-preview-inline{width:200px;flex-shrink:0}
+
+/* Vivino panel */
+.vivino-panel{margin-top:.8rem;background:rgba(180,40,40,.06);border:1px solid rgba(201,168,76,.18);border-radius:10px;padding:.75rem .9rem}
+.vivino-panel-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem}
+.vivino-note{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--gold);display:flex;align-items:baseline;gap:.3rem}
+.vivino-note span{font-size:.8rem;color:var(--muted)}
+.vivino-stars{color:#e8c450;font-size:.9rem;letter-spacing:1px}
+.vivino-row{display:flex;justify-content:space-between;font-size:.82rem;padding:.18rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.vivino-row:last-child{border-bottom:none}
+.vivino-lbl{color:var(--muted);font-size:.74rem}
+.vivino-val{color:var(--cream);text-align:right}
+.vivino-accords{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.3rem}
+.vivino-accord{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:4px;padding:.1rem .45rem;font-size:.72rem;color:var(--gold2)}
+.vivino-desc{font-size:.8rem;color:var(--muted);font-style:italic;margin-top:.4rem;line-height:1.5}
+.btn-vivino{padding:.38rem .8rem;background:rgba(180,40,40,.2);border:1px solid rgba(220,80,80,.35);border-radius:7px;color:#ff9999;cursor:pointer;font-family:'Crimson Pro',serif;font-size:.82rem;transition:all .2s;white-space:nowrap}
+.btn-vivino:hover{background:rgba(180,40,40,.4)}
+.btn-vivino.loading{opacity:.6;pointer-events:none}
+.vivino-link{font-size:.72rem;color:rgba(201,168,76,.6);text-decoration:none;display:block;margin-top:.3rem}
+.vivino-link:hover{color:var(--gold)}
+
+@media(max-width:900px){
+  .inv-right{display:none;position:fixed;inset:0;z-index:180;background:rgba(8,4,4,.85);align-items:flex-end;padding:0}
+  .inv-right.open{display:flex!important}
+  .vin-panel{border-radius:16px 16px 0 0;width:100%;max-height:80vh;overflow-y:auto}
+}
+@media(max-width:600px){
+  .header-title{font-size:.9rem}.nav-tab{padding:.28rem .4rem;font-size:.72rem}
+  td,th{padding:.42rem .55rem}.stat-value{font-size:1.35rem}
+  .form-grid{grid-template-columns:1fr}.form-group.full{grid-column:1}
+  .hide-mobile{display:none}.loge{width:140px;height:105px}
+}
+
+/* Toast */
+#toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(30,40,28,.96);border:1px solid rgba(80,200,80,.4);color:#a0f0a0;
+  padding:.55rem 1.2rem;border-radius:20px;font-size:.82rem;z-index:9999;
+  opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+{% endraw %}
+</head>
+<body>
+<div id="toast"></div>
+<header>
+  <div class="header-title">🍷 <span>Ma Cave</span></div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('inventaire',this)">Inventaire</button>
+    <button class="nav-tab" onclick="showView('casiers',this)">Cave</button>
+    <button class="nav-tab" onclick="showView('alertes',this)">Alertes <span id="badge-alertes"></span></button>
+    <button class="nav-tab" onclick="showView('stats',this)">Stats</button>
+  </nav>
+</header>
+<main>
+
+<!-- INVENTAIRE -->
+<div id="view-inventaire" class="view active">
+  <div class="filters">
+    <input class="search-box" type="search" placeholder="Rechercher domaine, appellation…" id="search-input" oninput="loadVins()">
+    <button class="filter-btn" id="btn-alerte" onclick="toggleAlerte()">✓ Prêts à boire</button>
+    <button class="btn-add" onclick="openModal()">+ Ajouter</button>
+  </div>
+  <div class="inv-layout">
+    <div class="inv-left">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:32px" data-col="couleur" onclick="sortBy('couleur')" style="cursor:pointer"></th>
+            <th data-col="domaine" onclick="sortBy('domaine')">Domaine<span class="sort-arrow"></span></th>
+            <th class="hide-mobile">Cuvée</th>
+            <th data-col="appellation" onclick="sortBy('appellation')">Appellation<span class="sort-arrow"></span></th>
+            <th data-col="millesime" onclick="sortBy('millesime')">Mill.<span class="sort-arrow"></span></th>
+            <th data-col="boire_a_partir" onclick="sortBy('boire_a_partir')" class="hide-mobile">Boire à partir de<span class="sort-arrow"></span></th>
+            <th data-col="boire_avant" onclick="sortBy('boire_avant')" class="hide-mobile">Boire avant<span class="sort-arrow"></span></th>
+            <th data-col="quantite" onclick="sortBy('quantite')">Btl<span class="sort-arrow"></span></th>
+            <th data-col="prix_unit" onclick="sortBy('prix_unit')" class="hide-mobile">Prix/u<span class="sort-arrow"></span></th>
+          </tr></thead>
+          <tbody id="tbody-vins"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="inv-right" id="inv-right" style="display:none">
+      <div class="vin-panel" id="vin-panel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CAVE + FRIGO (onglets) -->
+<div id="view-casiers" class="view">
+  <!-- Légende couleurs -->
+  <div class="couleur-legend">
+    <span style="color:var(--muted);font-size:.73rem">Couleurs :</span>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--rouge-mid);border:1px solid var(--rouge-border)"></div>Rouge</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blanc-mid);border:1px solid var(--blanc-border)"></div>Blanc</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--rose-mid);border:1px solid var(--rose-border)"></div>Rosé</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--champ-mid);border:1px solid var(--champ-border)"></div>Champ.</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--porto-mid);border:1px solid var(--porto-border)"></div>Porto</div>
+    <span style="margin-left:.4rem;color:var(--muted);font-size:.73rem">|</span>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(70,200,110,.3);border:1px solid rgba(70,200,110,.7)"></div><span style="color:var(--pret)">Prêt</span></div>
+  </div>
+  <!-- Barre de recherche -->
+  <div style="margin-bottom:.9rem">
+    <input class="cave-search" type="search" placeholder="🔍 Rechercher dans la cave et le frigo…" id="cave-search-input" oninput="filterCave(this.value)" style="width:100%;max-width:500px">
+    <div id="cave-search-info" style="font-size:.76rem;color:var(--gold);margin-top:.3rem;min-height:1.1em"></div>
+  </div>
+  <!-- Onglets -->
+  <div class="mur-tabs" style="margin-bottom:.9rem">
+    <button class="mur-tab active" id="tab-mur1" onclick="switchMur('mur1',this)">🧱 Mur 1</button>
+    <button class="mur-tab" id="tab-mur2" onclick="switchMur('mur2',this)">🧱 Mur 2</button>
+    <button class="mur-tab" id="tab-frigo" onclick="switchMur('frigo-section',this)">❄ Frigo <span id="badge-frigo-tab"></span></button>
+  </div>
+
+  <div id="mur1" class="mur-view">
+    <div class="mur-label">Mur 1 — 3 colonnes × 4 blocs — L1↖ L2↗ L3↙ L4↘</div>
+    <div class="mur-layout"><div class="bloc-nums" id="bloc-nums-1"></div><div class="mur-cols" id="mur1-cols"></div></div>
+  </div>
+  <div id="mur2" class="mur-view" style="display:none">
+    <div class="mur-label">Mur 2 — 3 colonnes × 4 blocs — L1↖ L2↗ L3↙ L4↘</div>
+    <div class="mur-layout"><div class="bloc-nums" id="bloc-nums-2"></div><div class="mur-cols" id="mur2-cols"></div></div>
+  </div>
+  <div id="frigo-section" class="mur-view" style="display:none">
+    <div class="frigo-wrap">
+      <div class="frigo-title">❄ Frigo à vin</div>
+      <div class="frigo-subtitle">3 rangées · ~50 bouteilles · zone de transit</div>
+      <div class="frigo-rangees" id="frigo-rangees"></div>
+    </div>
+  </div>
+
+  <div id="popup-backdrop" class="popup-backdrop" onclick="closePopup();closeFrigoPopup()"></div>
+  <!-- Popup cave -->
+  <div id="loge-popup" class="loge-popup" style="display:none">
+    <div class="loge-popup-close" onclick="closePopup()">✕</div>
+    <div class="popup-scroll-inner">
+      <div id="popup-content"></div>
+      <div class="popup-actions" id="popup-actions"></div>
+      <button class="popup-close-btn" onclick="closePopup()">Fermer</button>
+    </div>
+  </div>
+  <!-- Popup frigo -->
+  <div id="frigo-cave-preview"><div class="preview-title" id="frigo-preview-title">📍 Aperçu</div><div id="frigo-preview-body"></div></div>
+  <div id="frigo-popup" class="frigo-popup" style="display:none">
+    <div class="loge-popup-close" onclick="closeFrigoPopup()">✕</div>
+    <div class="popup-scroll-inner">
+      <div id="frigo-popup-content"></div>
+      <div class="popup-actions" id="frigo-popup-actions"></div>
+      <button class="popup-close-btn" onclick="closeFrigoPopup()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ALERTES -->
+<div id="view-alertes" class="view">
+  <div id="alertes-container"><div class="empty-state">Chargement…</div></div>
+</div>
+
+<!-- STATS -->
+<div id="view-stats" class="view">
+  <div class="stats-grid">
+    <div class="stat-card"><span class="stat-value" id="s-btl">—</span><div class="stat-label">Cave (btl)</div></div>
+    <div class="stat-card frigo"><span class="stat-value" id="s-frigo">—</span><div class="stat-label">❄ Frigo (btl)</div></div>
+    <div class="stat-card"><span class="stat-value" id="s-val">—</span><div class="stat-label">Valeur cave</div></div>
+    <div class="stat-card"><span class="stat-value" id="s-dom">—</span><div class="stat-label">Domaines</div></div>
+    <div class="stat-card"><span class="stat-value" id="s-ref">—</span><div class="stat-label">Références</div></div>
+    <div class="stat-card alert"><span class="stat-value" id="s-al">—</span><div class="stat-label">✓ Prêts à boire</div></div>
+    <div class="stat-card special"><span class="stat-value" id="s-bues">—</span><div class="stat-label">🍷 Bues en 2026</div></div>
+  </div>
+
+  <!-- Highlights -->
+  <div class="stats-section">
+    <div class="stats-section-title">🏆 À la une</div>
+    <div class="stats-two-col" id="s-highlights"></div>
+  </div>
+
+  <!-- Couleurs + décennies -->
+  <div class="stats-two-col" style="margin-top:1rem">
+    <div class="stats-section">
+      <div class="stats-section-title">🎨 Par couleur</div>
+      <div class="couleur-pie" id="s-couleurs"></div>
+    </div>
+    <div class="stats-section">
+      <div class="stats-section-title">📅 Par décennie</div>
+      <div class="decade-bars" id="s-decennies"></div>
+    </div>
+  </div>
+
+  <!-- Top domaines + appellations -->
+  <div class="stats-two-col" style="margin-top:1rem">
+    <div class="stats-section">
+      <div class="stats-section-title">🍷 Top producteurs</div>
+      <div id="top-domaines"></div>
+    </div>
+    <div class="stats-section">
+      <div class="stats-section-title">📍 Top appellations</div>
+      <div id="top-appels"></div>
+    </div>
+  </div>
+</div>
+</main>
+
+<!-- VIVINO POPUP -->
+<div class="vivino-overlay" id="vivino-overlay" onclick="if(event.target===this)closeVivinoPopup()">
+  <div class="vivino-modal">
+    <div class="vivino-header">
+      <h3>🍷 Rechercher sur Vivino</h3>
+      <button class="vivino-close-btn" onclick="closeVivinoPopup()">✕</button>
+    </div>
+    <div class="vivino-search-bar">
+      <input type="text" id="vivino-q" placeholder="Domaine, appellation, millésime…" 
+             onkeydown="if(event.key==='Enter')searchVivino()">
+      <button onclick="searchVivino()">🔍 Chercher</button>
+    </div>
+    <div class="vivino-results" id="vivino-results">
+      <div class="vivino-status">Saisissez un nom de vin ou domaine pour rechercher</div>
+    </div>
+  </div>
+</div>
+
+<!-- Version -->
+<div class="app-version">Cave à Vin v4.0</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Ajouter un vin</div>
+    <div style="margin-bottom:.8rem">
+      <button class="btn-vivino-open" onclick="openVivinoPopup()" type="button">
+        <span>🍷</span> Rechercher sur Vivino
+      </button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full ac-wrap">
+        <label>Domaine <span class="req">*</span></label>
+        <input type="text" id="f-domaine" placeholder="Taper pour chercher ou saisir…" autocomplete="off"
+               oninput="acSearch('domaine',this.value)" onfocus="acSearch('domaine',this.value)">
+        <div class="ac-list" id="ac-domaine"></div>
+      </div>
+      <div class="form-group full">
+        <label>Cuvée</label>
+        <input type="text" id="f-cuvee" placeholder="ex: Les Loges, Vieilles Vignes…" autocomplete="off">
+      </div>
+      <div class="form-group full ac-wrap">
+        <label>Appellation</label>
+        <input type="text" id="f-appellation" placeholder="Taper pour chercher ou saisir…" autocomplete="off"
+               oninput="acSearch('appellation',this.value)" onfocus="acSearch('appellation',this.value)">
+        <div class="ac-list" id="ac-appellation"></div>
+      </div>
+      <div class="form-group">
+        <label>Millésime</label>
+        <input type="text" id="f-millesime" placeholder="2020">
+      </div>
+      <div class="form-group">
+        <label>Couleur <span class="req">*</span></label>
+        <select id="f-couleur">
+          <option value="">— Non précisé —</option>
+          <option value="rouge">🔴 Rouge</option>
+          <option value="blanc">🟡 Blanc</option>
+          <option value="rose">🌸 Rosé</option>
+          <option value="champagne">✨ Champagne / Pétillant</option>
+          <option value="porto">🟤 Porto / Muté</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Bouteilles <span class="req">*</span></label>
+        <input type="number" id="f-quantite" placeholder="1–6" min="0">
+      </div>
+      <div class="form-group">
+        <label>Prix unitaire (€)</label>
+        <input type="number" id="f-prix_unit" placeholder="Optionnel" step="0.01" min="0">
+      </div>
+      <div class="form-group">
+        <label>Boire à partir de</label>
+        <input type="number" id="f-boire_a_partir" placeholder="Optionnel" min="2000" max="2060">
+      </div>
+      <div class="form-group">
+        <label>Boire avant</label>
+        <input type="number" id="f-boire_avant" placeholder="Optionnel" min="2000" max="2060">
+      </div>
+      <div class="form-group full section-sep" id="emplacements-section">
+        <label>Emplacements <span style="color:var(--muted);font-weight:normal;text-transform:none;letter-spacing:0" id="emp-slots-label"></span></label>
+        <div id="share-suggestion" class="share-suggestion" style="display:none"></div>
+        <div id="emp-slots"></div>
+        <!-- Aperçu mini-plan -->
+        <div class="emp-preview" id="emp-preview">
+          <div class="emp-preview-title">📍 Aperçu de l'emplacement</div>
+          <div id="emp-preview-content"></div>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label>Notes</label>
+        <textarea id="f-notes" placeholder="Dégustations, accords…"></textarea>
+      </div>
+      <!-- Bouton Vivino supprimé -->
+    </div>
+    <div style="font-size:.73rem;color:var(--muted);margin-top:.5rem"><span style="color:var(--gold)">*</span> champs obligatoires</div>
+    <div class="form-actions">
+      <button class="btn-delete" id="btn-delete" onclick="deleteVin()" style="display:none">Supprimer</button>
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-save" onclick="saveVin()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+{% raw %}
+<script>
+const ANNEE = new Date().getFullYear();
+let caveData=null, empsLibres=[], currentEmps=[], selectedVinId=null;
+
+const COULEUR={
+  rouge:{cls:'rouge',dot:'#c04040',icon:'🔴',label:'Rouge'},
+  blanc:{cls:'blanc',dot:'#d4c460',icon:'🟡',label:'Blanc'},
+  rose:{cls:'rose',dot:'#d07090',icon:'🌸',label:'Rosé'},
+  champagne:{cls:'champagne',dot:'#c8a840',icon:'✨',label:'Champagne'},
+  porto:{cls:'porto',dot:'#7a3018',icon:'🟤',label:'Porto'},
+};
+const LOGE_LABELS={1:'L1↖',2:'L2↗',3:'L3↙',4:'L4↘'};
+function isPret(v){return v.boire_a_partir&&v.boire_a_partir<=ANNEE;}
+
+// ── NAV ────────────────────────────────────────────────────────────────────
+function showView(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='inventaire')loadVins();
+  if(name==='casiers'){loadCasiers();}
+  if(name==='alertes')loadAlertes();
+  if(name==='stats')loadStats();
+}
+
+// ── INVENTAIRE ─────────────────────────────────────────────────────────────
+let currentSort='domaine', sortDir=1, filtreAlerte=false, editingId=null;
+
+function sortBy(col){
+  if(currentSort===col) sortDir*=-1; else{currentSort=col;sortDir=1;}
+  // Update header arrows
+  document.querySelectorAll('thead th[data-col]').forEach(th=>{
+    const arrow=th.querySelector('.sort-arrow');
+    if(arrow){arrow.textContent=th.dataset.col===col?(sortDir===1?' ↑':' ↓'):'';}
+  });
+  loadVins();
+}
+function toggleAlerte(){filtreAlerte=!filtreAlerte;document.getElementById('btn-alerte').classList.toggle('active',filtreAlerte);loadVins();}
+
+async function loadVins(){
+  const q=document.getElementById('search-input').value;
+  let url=`/api/vins?sort=${currentSort}&dir=${sortDir}&q=${encodeURIComponent(q)}`;
+  if(filtreAlerte)url+='&alerte=1';
+  const vins=await(await fetch(url)).json();
+  const tbody=document.getElementById('tbody-vins');
+  if(!vins.length){tbody.innerHTML='<tr><td colspan="6" class="empty-state">Aucun vin trouvé</td></tr>';return;}
+  tbody.innerHTML=vins.map(v=>{
+    if(v.is_divers){
+      return`<tr class="row-divers" data-id="${v.id}" style="background:rgba(220,60,60,.05)">
+        <td style="text-align:center"><span style="color:var(--muted)">📦</span></td>
+        <td colspan="6"><em style="color:var(--muted)">Case non attribuée</em>
+          <span style="font-size:.75rem;color:var(--muted);margin-left:.5rem">${v.loge_id||''}</span></td>
+        <td>${v.quantite}</td>
+        <td><button onclick="libererCase(${v.id},event)" style="font-size:.72rem;padding:.2rem .55rem;background:rgba(220,60,60,.18);border:1px solid rgba(220,60,60,.35);color:#ff9988;border-radius:5px;cursor:pointer">🗑 Libérer</button></td>
+      </tr>`;
+    }
+    const pret=isPret(v);
+    const rowCls=(v.id===selectedVinId?'active-row ':'')+( pret?'row-pret':'');
+    const bap=v.boire_a_partir?`<span class="badge-pret">≥${v.boire_a_partir}</span>`:'';
+    const cc=COULEUR[v.couleur];
+    const wicon=cc?`<span class="wine-icon">${cc.icon}</span>`:'<span style="color:var(--muted)">·</span>';
+    return`<tr class="${rowCls}" onclick="selectVin(${v.id})" data-id="${v.id}">
+      <td style="text-align:center">${wicon}</td>
+      <td><strong>${v.domaine}</strong></td>
+      <td class="muted hide-mobile">${v.cuvee||'—'}</td>
+      <td class="muted">${v.appellation||'—'}</td>
+      <td>${v.millesime||'—'}</td>
+      <td class="hide-mobile">${bap}</td>
+      <td class="hide-mobile">${v.boire_avant?`<span class="badge-pret" style="background:rgba(255,140,80,.15);color:#ffaa88;border-color:rgba(255,140,80,.35)">≤${v.boire_avant}</span>`:'—'}</td>
+      <td>${v.quantite}</td>
+      <td class="hide-mobile">${v.prix_unit?v.prix_unit.toFixed(2)+' €':'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── PANNEAU INFO ────────────────────────────────────────────────────────────
+async function selectVin(id){
+  if(selectedVinId===id){selectedVinId=null;closeVinPanel();loadVins();return;}
+  selectedVinId=id;
+  document.querySelectorAll('#tbody-vins tr').forEach(tr=>tr.classList.toggle('active-row',parseInt(tr.dataset.id)===id));
+  const v=await(await fetch(`/api/vins/${id}`)).json();
+  const membres=await(await fetch(`/api/vins/${id}/groupe`)).json();
+  const totalQte=membres.reduce((s,m)=>s+m.quantite,0);
+  v._totalQte=totalQte; v._membres=membres;
+  renderVinPanel(v);
+}
+function closeVinPanel(){
+  const panel=document.getElementById('inv-right');
+  panel.style.display='none';
+  panel.classList.remove('open');
+  selectedVinId=null;
+  document.querySelectorAll('#tbody-vins tr').forEach(tr=>tr.classList.remove('active-row'));
+}
+function renderVinPanel(v){
+  const cc=COULEUR[v.couleur];
+  const pret=isPret(v);
+  const statut=pret?'<span style="color:#80e8a0;font-size:.78rem;margin-left:.4rem">✓ Prêt à boire</span>':'';
+  const qteAff=v._totalQte||v.quantite;
+  const valTot=v.prix_unit&&qteAff?(v.prix_unit*qteAff).toFixed(2)+' €':'—';
+  const membres=v._membres||[];
+  const placed=membres.filter(m=>m.mur&&m.mur>0&&m.loge_id);
+  const rows=[
+    ['Appellation',v.appellation||'—'],
+    ['Cuvée', v.cuvee?`<em>${v.cuvee}</em>`:'—'],
+    ['Millésime',v.millesime||'—'],
+    ['Couleur',cc?cc.icon+' '+cc.label:'—'],
+    ['Boire à partir de',v.boire_a_partir?`<span style="color:#80e8a0">${v.boire_a_partir}</span>`:'—'],
+    ['Boire avant',v.boire_avant?`<span style="color:#ffaa88">${v.boire_avant}</span>`:'—'],
+    ['Bouteilles',`<strong style="color:var(--gold)">${qteAff}</strong>`],
+    ['Prix/u',v.prix_unit?v.prix_unit.toFixed(2)+' €':'—'],
+    ['Valeur totale',valTot],
+  ];
+  if(v.notes)rows.push(['Notes',`<em style="font-size:.82rem;color:var(--muted)">${v.notes}</em>`]);
+  const miniCave=placed.length>0&&caveData?renderMiniCave(v):'';
+  const vivinoId=`vivino-${v.id}`;
+  document.getElementById('vin-panel').innerHTML=`
+    <div class="vin-panel-header">
+      <div class="vin-panel-domaine">${v.domaine}${statut}</div>
+      ${v.millesime?`<div class="vin-panel-appel">${v.millesime}${v.cuvee?' · '+v.cuvee:''}</div>`:''}
+    </div>
+    <div class="vin-panel-body">
+      ${rows.map(([l,val])=>`<div class="vin-info-row"><span class="vin-info-label">${l}</span><span class="vin-info-value">${val}</span></div>`).join('')}
+      ${miniCave}
+    </div>
+    <div class="vin-panel-actions">
+      <button class="btn-panel-edit" onclick="openModal(${v.id})">✏ Modifier</button>
+      <button class="btn-panel-close" onclick="closeVinPanel()">✕</button>
+    </div>`;
+  const panel=document.getElementById('inv-right');
+  const isMobile=window.innerWidth<900;
+  if(isMobile){panel.style.display='flex';panel.classList.add('open');}
+  else{panel.style.display='block';panel.classList.remove('open');}
+}
+
+async function searchVivino(vinId, domEnc, appEnc, millesime){
+  const domaine=decodeURIComponent(domEnc);
+  const appellation=decodeURIComponent(appEnc);
+  const panelId=`vivino-${vinId}`;
+  const panel=document.getElementById(panelId);
+  if(!panel)return;
+  const btn=panel.parentElement.querySelector('.btn-vivino');
+  if(btn){btn.classList.add('loading');btn.textContent='🔍 Recherche en cours...';}
+  panel.style.display='block';
+  panel.innerHTML=`<div class="vivino-panel-title">🍷 Vivino</div><div style="font-size:.8rem;color:var(--muted);font-style:italic">Recherche en cours…</div>`;
+  try{
+    const params=new URLSearchParams({domaine,appellation,millesime});
+    const r=await fetch(`/api/vivino_search?${params}`);
+    const data=await r.json();
+    if(!r.ok||data.error){
+      panel.innerHTML=`<div class="vivino-panel-title">🍷 Vivino — Erreur</div>
+        <div style="font-size:.78rem;color:#ff9999;background:rgba(180,40,40,.1);border:1px solid rgba(180,40,40,.3);border-radius:6px;padding:.5rem .7rem;margin-top:.3rem;word-break:break-word">
+          ${data.error||'Erreur inconnue'}
+        </div>`;
+      if(btn){btn.classList.remove('loading');btn.textContent='🍷 Réessayer';}
+      return;
+    }
+    const stars=data.note_vivino?starsHtml(parseFloat(data.note_vivino)):'';
+    const accords=Array.isArray(data.accords_mets)&&data.accords_mets.length
+      ?`<div class="vivino-accords">${data.accords_mets.map(a=>`<span class="vivino-accord">${a}</span>`).join('')}</div>`:'';
+    const desc=data.description?`<div class="vivino-desc">${data.description}</div>`:'';
+    const link=data.url_vivino?`<a class="vivino-link" href="${data.url_vivino}" target="_blank">↗ Voir sur Vivino</a>`:'';
+
+    let rows='';
+    if(data.note_vivino){
+      rows+=`<div class="vivino-note">${data.note_vivino}<span>/ 5</span></div>
+             <div class="vivino-stars">${stars}</div>`;
+      if(data.nb_avis)rows+=`<div style="font-size:.7rem;color:var(--muted);margin-bottom:.4rem">${Number(data.nb_avis).toLocaleString('fr')} avis</div>`;
+    }
+    const infoRows=[];
+    if(data.nom_vin) infoRows.push(['Vin trouvé', `<strong>${data.nom_vin}</strong>${data.millesime_trouve?' '+data.millesime_trouve:''}`]);
+    if(data.producteur) infoRows.push(['Producteur', data.producteur]);
+    if(data.region) infoRows.push(['Région', data.region+(data.pays?`, ${data.pays}`:'')]);
+    if(data.prix_estime) infoRows.push(['Prix estimé', data.prix_estime+' €']);
+    if(data.nb_resultats>1) infoRows.push(['Résultats Vivino', `${data.nb_resultats} vins trouvés`]);
+    if(infoRows.length) rows+=infoRows.map(([l,val])=>`<div class="vivino-row"><span class="vivino-lbl">${l}</span><span class="vivino-val">${val}</span></div>`).join('');
+
+    panel.innerHTML=`
+      <div class="vivino-panel-title">🍷 Vivino <span style="font-size:.65rem;opacity:.6">données indicatives</span></div>
+      ${rows}${accords}${desc}${link}`;
+    if(btn){btn.classList.remove('loading');btn.textContent='🔄 Actualiser Vivino';}
+  }catch(e){
+    panel.innerHTML=`<div class="vivino-panel-title">🍷 Vivino</div><div style="font-size:.8rem;color:var(--muted)">Erreur de connexion.</div>`;
+    if(btn){btn.classList.remove('loading');btn.textContent='🍷 Réessayer Vivino';}
+  }
+}
+function starsHtml(note){
+  const full=Math.floor(note);const half=note-full>=0.3?1:0;const empty=5-full-half;
+  return'★'.repeat(full)+(half?'½':'')+'☆'.repeat(empty);
+}
+
+function renderMiniCave(v){
+  if(!caveData)return'';
+  const membres=v._membres||[];
+  const placed=membres.filter(m=>m.mur&&m.mur>0&&m.loge_id);
+  if(!placed.length)return'';
+  // Group lids by mur
+  const byMur={};
+  placed.forEach(m=>{
+    if(!byMur[m.mur])byMur[m.mur]=new Set();
+    byMur[m.mur].add(m.loge_id);
+  });
+  let html='<div class="mini-cave"><div class="mini-cave-title">📍 Emplacement</div>';
+  Object.entries(byMur).forEach(([mur,lids])=>{
+    html+=`<div style="font-size:.65rem;color:var(--muted);margin:.3rem 0 .2rem">Mur ${mur}</div>`;
+    html+=`<div class="mini-mur-wrap">${renderMiniCaveHtml(parseInt(mur),lids)}</div>`;
+  });
+  return html+'</div>';
+}
+function renderMiniCaveHtml(murNum, targetLids){
+  if(!caveData)return'';
+  const murKey=murNum===1?'mur1':'mur2';
+  const cols=caveData[murKey];
+  if(!cols)return'';
+  let html=`<div class="mini-mur">`;
+  cols.forEach((blocIds,ci)=>{
+    html+=`<div class="mini-col"><div class="mini-col-label">C${ci+1}</div>`;
+    blocIds.forEach(bid=>{
+      const bloc=caveData.blocs[bid];
+      html+='<div class="mini-bloc">';
+      ['L1','L2','L3','L4'].forEach(lk=>{
+        const loge=bloc[lk];
+        const isTarget=targetLids.has(loge?.loge_id);
+        const ccls=loge&&!loge.est_vide&&loge.quantite>0?(COULEUR[loge.couleur]?.cls||''):'';
+        html+=`<div class="mini-loge${ccls?' '+ccls:''}${isTarget?' highlighted':''}" title="${loge?.domaine||''}"></div>`;
+      });
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+  return html+'</div>';
+}
+
+function updateEmpPreview(){
+  if(!caveData)return;
+  const n=nbSlots(parseInt(document.getElementById('f-quantite').value||1));
+  const selectedLids=new Set();
+  for(let i=0;i<n;i++){const v=document.getElementById(`f-emp-${i}`)?.value;if(v)selectedLids.add(v);}
+  const preview=document.getElementById('emp-preview');
+  const content=document.getElementById('emp-preview-content');
+  if(!selectedLids.size){preview.style.display='none';return;}
+  // Group by mur
+  const byMur={};
+  selectedLids.forEach(lid=>{
+    const parts=lid.match(/M(\d+)/);if(!parts)return;
+    const m=parseInt(parts[1]);
+    if(!byMur[m])byMur[m]=new Set();
+    byMur[m].add(lid);
+  });
+  let html='';
+  Object.entries(byMur).forEach(([mur,lids])=>{
+    if(Object.keys(byMur).length>1)html+=`<div style="font-size:.65rem;color:var(--muted);margin:.25rem 0 .15rem">Mur ${mur}</div>`;
+    html+=renderMiniCaveHtml(parseInt(mur),lids);
+  });
+  content.innerHTML=html;
+  preview.style.display='block';
+}
+
+// ── AUTOCOMPLETE ────────────────────────────────────────────────────────────
+let acTimers={};
+async function acSearch(field,val){
+  clearTimeout(acTimers[field]);
+  const list=document.getElementById('ac-'+field);
+  if(val===undefined)val=document.getElementById('f-'+field).value;
+  acTimers[field]=setTimeout(async()=>{
+    const data=await(await fetch(`/api/autocomplete?field=${field}&q=${encodeURIComponent(val)}`)).json();
+    if(!data.length){list.innerHTML=val.length>=1?`<div class="ac-empty">Aucun résultat — sera créé</div>`:'';list.style.display=val.length>=1?'block':'none';return;}
+    list.innerHTML=data.map(d=>{const e=d.replace(/'/g,"\\'");return`<div class="ac-item" onmousedown="event.preventDefault();acSelect('${field}','${e}')">${d}</div>`;}).join('');
+    list.style.display='block';
+  },120);
+}
+function acSelect(field,val){document.getElementById('f-'+field).value=val;document.getElementById('ac-'+field).style.display='none';document.getElementById('f-'+field).focus();}
+document.addEventListener('mousedown',e=>{if(!e.target.closest('.ac-wrap'))document.querySelectorAll('.ac-list').forEach(l=>l.style.display='none');});
+
+// ── STATS ───────────────────────────────────────────────────────────────────
+const COULEUR_DOT={rouge:'#c04040',blanc:'#d4b840',rose:'#d06080',champagne:'#c8a030',porto:'#8b3a10'};
+async function loadStats(){
+  const s=await(await fetch('/api/stats')).json();
+  document.getElementById('s-btl').textContent=s.total_bouteilles.toLocaleString('fr');
+  document.getElementById('s-frigo').textContent=s.frigo_total;
+  document.getElementById('s-val').textContent=s.valeur_totale.toLocaleString('fr',{maximumFractionDigits:0})+' €';
+  document.getElementById('s-dom').textContent=s.nb_domaines;
+  document.getElementById('s-ref').textContent=s.nb_refs;
+  document.getElementById('s-al').textContent=s.alertes;
+  const buesEl=document.getElementById('s-bues');
+  if(buesEl){buesEl.textContent=s.bues_annee||0;buesEl.closest('.stat-card').querySelector('.stat-label').textContent=`🍷 Bues en ${new Date().getFullYear()}`}
+  document.getElementById('badge-alertes').textContent=s.alertes>0?` (${s.alertes})`:'';
+  const bf=document.getElementById('badge-frigo')||document.getElementById('badge-frigo-tab');
+  if(bf) bf.textContent=s.frigo_total>0?` (${s.frigo_total})`:'';
+
+  // Highlights
+  const hl=document.getElementById('s-highlights');
+  if(hl){
+    const pc=s.plus_chere;
+    const pv=s.plus_vieille;
+    hl.innerHTML=`
+      ${pc?`<div class="stat-highlight">
+        <div class="stat-highlight-label">💎 Bouteille la plus chère</div>
+        <div class="stat-highlight-value">${pc.domaine}</div>
+        <div class="stat-highlight-sub">${pc.appellation||''} ${pc.millesime?'· '+pc.millesime:''} — <strong style="color:var(--gold)">${parseFloat(pc.prix_unit).toFixed(2)} €/btl</strong></div>
+      </div>`:''}
+      ${pv?`<div class="stat-highlight">
+        <div class="stat-highlight-label">⌛ Millésime le plus ancien</div>
+        <div class="stat-highlight-value">${pv.domaine}</div>
+        <div class="stat-highlight-sub">${pv.appellation||''} — <strong style="color:var(--gold2)">${pv.millesime}</strong></div>
+      </div>`:''}
+      <div class="stat-highlight">
+        <div class="stat-highlight-label">💰 Valeur moyenne / bouteille</div>
+        <div class="stat-highlight-value" style="color:var(--gold)">${s.valeur_moyenne.toFixed(2)} €</div>
+        <div class="stat-highlight-sub">pour ${s.total_bouteilles} bouteilles en cave</div>
+      </div>
+      ${s.alertes_bientot>0?`<div class="stat-highlight" style="border-color:rgba(255,140,80,.35)">
+        <div class="stat-highlight-label">⚠️ À boire d'urgence</div>
+        <div class="stat-highlight-value" style="color:#ffaa88">${s.alertes_bientot}</div>
+        <div class="stat-highlight-sub">bouteilles à boire avant fin ${new Date().getFullYear()+1}</div>
+      </div>`:''}`;
+  }
+
+  // Couleurs
+  const coulDiv=document.getElementById('s-couleurs');
+  if(coulDiv&&s.couleurs){
+    const totalCoul=s.couleurs.reduce((sum,c)=>sum+c.total,0)||1;
+    const labels={rouge:'🔴 Rouge',blanc:'🟡 Blanc',rose:'🌸 Rosé',champagne:'🥂 Champ.',porto:'🟤 Porto'};
+    coulDiv.innerHTML=s.couleurs.map(c=>{
+      const pct=Math.round(c.total/totalCoul*100);
+      const dot=COULEUR_DOT[c.couleur]||'#888';
+      return`<div class="couleur-pill">
+        <div style="width:10px;height:10px;border-radius:50%;background:${dot}"></div>
+        <span>${labels[c.couleur]||c.couleur}</span>
+        <strong style="color:var(--gold)">${c.total}</strong>
+        <span style="color:var(--muted);font-size:.72rem">(${pct}%)</span>
+      </div>`;}).join('');
+  }
+
+  // Décennies
+  const decDiv=document.getElementById('s-decennies');
+  if(decDiv&&s.decennies){
+    const decades=Object.entries(s.decennies).sort((a,b)=>a[0].localeCompare(b[0]));
+    const mx=Math.max(...decades.map(d=>d[1]));
+    decDiv.innerHTML=decades.map(([d,n])=>`
+      <div class="bar-row">
+        <div class="bar-label"><span style="font-size:.8rem">${d}</span><span style="color:var(--gold);font-size:.8rem">${n} btl</span></div>
+        <div class="bar-track"><div class="bar-fill" style="background:var(--burg2);width:${Math.round(n/mx*100)}%"></div></div>
+      </div>`).join('');
+  }
+
+  // Top domaines
+  const topD=document.getElementById('top-domaines');
+  if(topD&&s.top_domaines){
+    const mx=s.top_domaines[0]?.total||1;
+    topD.innerHTML=s.top_domaines.map(d=>`
+      <div class="bar-row">
+        <div class="bar-label"><span style="font-size:.82rem">${d.domaine}</span><span style="color:var(--gold);font-size:.82rem">${d.total} btl</span></div>
+        <div class="bar-track"><div class="bar-fill" style="background:var(--burg2);width:${Math.round(d.total/mx*100)}%"></div></div>
+      </div>`).join('');
+  }
+
+  // Top appellations
+  const topA=document.getElementById('top-appels');
+  if(topA&&s.top_appels){
+    const mx=s.top_appels[0]?.total||1;
+    topA.innerHTML=s.top_appels.map(a=>`
+      <div class="bar-row">
+        <div class="bar-label"><span style="font-size:.82rem">${a.appellation}</span><span style="color:var(--gold);font-size:.82rem">${a.total} btl</span></div>
+        <div class="bar-track"><div class="bar-fill" style="background:rgba(100,140,201,.6);width:${Math.round(a.total/mx*100)}%"></div></div>
+      </div>`).join('');
+  }
+}
+
+// ── CAVE ────────────────────────────────────────────────────────────────────
+function switchMur(id,btn){
+  document.querySelectorAll('.mur-view').forEach(v=>v.style.display='none');
+  document.querySelectorAll('.mur-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).style.display='block';
+  if(btn)btn.classList.add('active');
+  // Update frigo badge
+  const bf=document.getElementById('badge-frigo-tab');
+  if(bf&&frigoData){
+    const n=Object.values(frigoData.grille).flatMap(r=>Object.values(r)).reduce((s,slot)=>s+(slot.quantite||0),0);
+    bf.textContent=n>0?` (${n})`:'';
+  }
+}
+
+async function loadCasiers(){
+  caveData=await(await fetch('/api/cave_structure')).json();
+  renderMur(1,caveData.mur1,'mur1-cols','bloc-nums-1');
+  renderMur(2,caveData.mur2,'mur2-cols','bloc-nums-2');
+  const fr=await(await fetch('/api/frigo')).json();
+  frigoData=fr;
+  renderFrigo(fr);
+}
+function renderMur(murNum,cols,colsId,numsId){
+  const colsEl=document.getElementById(colsId),numsEl=document.getElementById(numsId);
+  colsEl.innerHTML='';numsEl.innerHTML='';
+  const blocH=2*118+3+6+4,gapBlocs=12;
+  for(let b=1;b<=4;b++){
+    if(b>1){const g=document.createElement('div');g.style.height=gapBlocs+'px';numsEl.appendChild(g);}
+    const el=document.createElement('div');el.className='bloc-num-item';el.style.height=blocH+'px';
+    el.textContent='B'+((murNum-1)*4+b);numsEl.appendChild(el);
+  }
+  cols.forEach((blocIds,ci)=>{
+    const col=document.createElement('div');col.className='beton-col';
+    const t=document.createElement('div');t.className='beton-col-title';t.textContent=`Col ${ci+1}`;col.appendChild(t);
+    blocIds.forEach(bid=>col.appendChild(renderBloc(caveData.blocs[bid])));
+    colsEl.appendChild(col);
+  });
+}
+function renderBloc(bloc){const el=document.createElement('div');el.className='bloc-beton';['L1','L2','L3','L4'].forEach(lk=>el.appendChild(renderLoge(bloc[lk])));return el;}
+function renderLoge(loge){
+  const el=document.createElement('div');
+  const empty=loge.est_vide||(!loge.domaine&&!loge.multi);
+  const pret=isPret(loge);const cc=COULEUR[loge.couleur];
+  let cls='loge';
+  if(empty)cls+=' vide';
+  else if(loge.multi)cls+=' multi-vins';
+  else if(pret)cls+=' pret-boire';
+  else cls+=' '+(cc?.cls||'no-color');
+  el.className=cls;
+  el.dataset.domaine=(loge.domaine||'').toLowerCase();
+  el.dataset.appellation=(loge.appellation||'').toLowerCase();
+  if(!empty){
+    const bcls=cc?.cls||'default';
+    if(loge.multi){
+      // Affichage multi-vins
+      const total=loge.quantite||0;
+      const dots=loge.multi_vins.map(v=>{
+        const c=COULEUR[v.couleur];
+        return `<div class="multi-dot" style="background:${c?c.dot:'#888'}"></div>`;
+      }).join('');
+      el.innerHTML=`
+        <div class="loge-qte">${total}</div>
+        <div class="loge-multi-label">${loge.multi_vins.length} vins</div>
+        <div class="multi-dots">${dots}</div>
+        <div class="loge-bottles">
+          ${bottleRow(loge.bottles_haut,bcls)}${bottleRow(loge.bottles_bas,bcls)}
+        </div>`;
+      el.onclick=()=>showMultiPopup(loge);
+    } else {
+      const prix=loge.prix_unit?parseFloat(loge.prix_unit).toFixed(2)+' €/u':'';
+      el.innerHTML=`
+        <div class="loge-qte">${loge.quantite}</div>
+        ${pret?'<div class="loge-pret-badge">✓ Prêt</div>':''}
+        <div>
+          <div class="loge-domaine" title="${loge.domaine}">${loge.domaine}</div>
+          <div class="loge-appel">${loge.appellation||''}${loge.cuvee?` <em style="opacity:.75">${loge.cuvee}</em>`:''}</div>
+          <div class="loge-millesime">${loge.millesime||''}</div>
+          ${prix?`<div class="loge-prix">${prix}</div>`:''}
+        </div>
+        <div class="loge-bottles">
+          ${bottleRow(loge.bottles_haut,bcls)}${bottleRow(loge.bottles_bas,bcls)}
+        </div>`;
+      el.onclick=()=>showPopup(loge);
+    }
+  }
+  return el;
+}
+function bottleRow(count,cls){let h='<div class="bottles-row">';for(let i=0;i<3;i++)h+=`<div class="bottle ${i<count?cls:'empty'}"></div>`;return h+'</div>';}
+
+// Recherche dans la cave — auto-switch vers l'onglet qui contient les résultats
+function filterCave(q){
+  const term=q.toLowerCase().trim();
+  const info=document.getElementById('cave-search-info');
+
+  document.querySelectorAll('.loge,.frigo-slot').forEach(el=>{
+    el.classList.remove('search-highlight','search-dim');
+  });
+
+  if(!term){info.textContent='';return;}
+
+  let matchMur1=0,matchMur2=0,matchFrigo=0;
+
+  document.querySelectorAll('#mur1 .loge:not(.vide)').forEach(el=>{
+    const match=el.dataset.domaine?.includes(term)||el.dataset.appellation?.includes(term);
+    el.classList.toggle('search-highlight',match);
+    el.classList.toggle('search-dim',!match);
+    if(match)matchMur1++;
+  });
+  document.querySelectorAll('#mur1 .loge.vide').forEach(el=>el.classList.add('search-dim'));
+
+  document.querySelectorAll('#mur2 .loge:not(.vide)').forEach(el=>{
+    const match=el.dataset.domaine?.includes(term)||el.dataset.appellation?.includes(term);
+    el.classList.toggle('search-highlight',match);
+    el.classList.toggle('search-dim',!match);
+    if(match)matchMur2++;
+  });
+  document.querySelectorAll('#mur2 .loge.vide').forEach(el=>el.classList.add('search-dim'));
+
+  document.querySelectorAll('.frigo-slot:not(.vide)').forEach(el=>{
+    const dom=(el.querySelector('.frigo-slot-dom')?.textContent||'').toLowerCase();
+    const match=dom.includes(term);
+    el.classList.toggle('search-highlight',match);
+    el.classList.toggle('search-dim',!match);
+    if(match)matchFrigo++;
+  });
+  document.querySelectorAll('.frigo-slot.vide').forEach(el=>el.classList.add('search-dim'));
+
+  const total=matchMur1+matchMur2+matchFrigo;
+  if(!total){info.textContent='Aucun résultat';info.style.color='var(--muted)';return;}
+
+  const parts=[];
+  if(matchMur1)parts.push(`Mur 1 : ${matchMur1}`);
+  if(matchMur2)parts.push(`Mur 2 : ${matchMur2}`);
+  if(matchFrigo)parts.push(`Frigo : ${matchFrigo}`);
+  info.textContent=`${total} résultat${total>1?'s':''} — `+parts.join(' · ');
+  info.style.color='var(--gold)';
+
+  // Auto-switch vers l'onglet avec le plus de résultats
+  const best=[['mur1',matchMur1,'tab-mur1'],['mur2',matchMur2,'tab-mur2'],['frigo-section',matchFrigo,'tab-frigo']]
+    .filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1])[0];
+  if(best){
+    document.querySelectorAll('.mur-view').forEach(v=>v.style.display='none');
+    document.querySelectorAll('.mur-tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById(best[0]).style.display='block';
+    document.getElementById(best[2]).classList.add('active');
+  }
+}
+
+// POPUP CAVE
+function showPopup(loge){
+  const pret=isPret(loge);const cc=COULEUR[loge.couleur];
+  const bap=loge.boire_a_partir?`<br><span class="lbl">Boire à partir de :</span> <span style="color:#80e8a0">${loge.boire_a_partir}</span>`:'';
+  const bav=loge.boire_avant?`<br><span class="lbl">Boire avant :</span> <span style="color:#ffaa88">${loge.boire_avant}</span>`:'';
+  const prix=loge.prix_unit?`<br><span class="lbl">Prix/u :</span> ${parseFloat(loge.prix_unit).toFixed(2)} €`:'';
+  const notes=loge.notes?`<br><span class="lbl">Notes :</span> <em style="color:var(--muted)">${loge.notes}</em>`:'';
+  document.getElementById('popup-content').innerHTML=`
+    <div class="popup-domaine">${loge.domaine}${pret?' <span style="color:#80e8a0;font-size:.82rem">✓</span>':''}</div>
+    <div class="popup-detail">
+      <span class="lbl">Appellation :</span> ${loge.appellation||'—'}${loge.cuvee?` — <em>${loge.cuvee}</em>`:''}<br>
+      <span class="lbl">Millésime :</span> ${loge.millesime||'—'}
+      ${bap}${bav}${prix}${cc?`<br><span class="lbl">Couleur :</span> ${cc.icon} ${cc.label}`:''}${notes}
+    </div>`;
+  document.getElementById('popup-actions').innerHTML=`
+    <input type="number" class="sortir-nb" id="sortir-nb" value="1" min="1" max="${loge.quantite}">
+    <button class="btn-sortir" onclick="sortirBouteilles(${loge.db_id})">🗑 Bue</button>
+    <button class="btn-frigo" onclick="transfererFrigo(${loge.db_id})">❄ Frigo</button>
+    <button class="btn-edit-popup" onclick="closePopup();openModal(${loge.db_id})">✏ Modifier</button>`;
+  document.getElementById('loge-popup').style.display='block';
+  document.getElementById('popup-backdrop').classList.add('open');
+}
+function closePopup(){document.getElementById('loge-popup').style.display='none';document.getElementById('popup-backdrop').classList.remove('open');}
+document.addEventListener('click',e=>{
+  const p=document.getElementById('loge-popup');
+  if(p&&p.style.display!=='none'&&!p.contains(e.target)&&!e.target.closest('.loge')&&window.innerWidth>900)closePopup();
+});
+
+async function showMultiPopup(loge){
+  // Charger les vins de la loge depuis l'API
+  const vins=await fetch(`/api/loge/${encodeURIComponent(loge.loge_id)}/vins`).then(r=>r.json());
+  const totalQte=vins.reduce((s,v)=>s+v.quantite,0);
+  document.getElementById('popup-content').innerHTML=`
+    <div class="popup-domaine" style="color:var(--gold)">📦 ${vins.length} vins — ${totalQte} bouteilles</div>
+    <div style="font-size:.72rem;color:var(--muted);margin-bottom:.5rem">${loge.loge_id}</div>
+    ${vins.map(v=>{
+      const cc=COULEUR[v.couleur];
+      const pret=isPret(v);
+      return`<div class="popup-multi-vin">
+        <div class="popup-multi-domaine">${cc?cc.icon+' ':''}<strong>${v.domaine}</strong>${pret?' <span style="color:#80e8a0;font-size:.75rem">✓</span>':''}</div>
+        <div class="popup-multi-detail">${v.appellation||''}${v.cuvee?` — ${v.cuvee}`:''} ${v.millesime||''} · ${v.quantite} btl${v.prix_unit?` · ${parseFloat(v.prix_unit).toFixed(2)}€`:''}${v.notes?`<br><em style="opacity:.7">${v.notes}</em>`:''}</div>
+        <div class="popup-multi-actions">
+          <input type="number" class="sortir-nb" value="1" min="1" max="${v.quantite}" id="mnb-${v.id}" style="width:44px">
+          <button class="btn-sortir" onclick="sortirBouteilles(${v.id},'mnb-${v.id}')">🗑 Bue</button>
+          <button class="btn-frigo" onclick="transfererFrigoFromMulti(${v.id})">❄</button>
+          <button class="btn-edit-popup" onclick="closePopup();openModal(${v.id})">✏</button>
+        </div>
+      </div>`;
+    }).join('')}`;
+  document.getElementById('popup-actions').innerHTML='';
+  document.getElementById('loge-popup').style.display='block';
+  document.getElementById('popup-backdrop').classList.add('open');
+}
+async function sortirBouteilles(dbId, nbFieldId='sortir-nb'){
+  const nb=parseInt(document.getElementById(nbFieldId)?.value||1)||1;
+  if(!confirm(`Marquer ${nb} bouteille(s) comme bue(s) ?`))return;
+  await fetch(`/api/sortir/${dbId}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nb})});
+  closePopup();await loadCasiers();loadVins();loadStats();
+}
+async function transfererFrigo(dbId){
+  const nb=parseInt(document.getElementById('sortir-nb').value)||1;
+  if(!confirm(`Transférer ${nb} bouteille(s) vers le frigo ?`))return;
+  const r=await fetch('/api/frigo/transferer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vin_id:dbId,nb})});
+  const res=await r.json();
+  if(r.ok){closePopup();await loadCasiers();loadStats();}
+  else alert(res.error||'Erreur');
+}
+async function transfererFrigoFromMulti(dbId){
+  const nb=parseInt(document.getElementById(`mnb-${dbId}`)?.value||1)||1;
+  if(!confirm(`Transférer ${nb} bouteille(s) vers le frigo ?`))return;
+  const r=await fetch('/api/frigo/transferer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vin_id:dbId,nb})});
+  const res=await r.json();
+  if(r.ok){closePopup();await loadCasiers();loadStats();}
+  else alert(res.error||'Erreur');
+}
+
+// ── FRIGO ───────────────────────────────────────────────────────────────────
+let frigoData=null;
+// loadFrigo est intégré dans loadCasiers — frigo affiché côte à côte dans la vue Cave
+function renderFrigo(data){
+  const container=document.getElementById('frigo-rangees');
+  container.innerHTML='';
+  const caps=[17,17,16];
+  for(let r=1;r<=3;r++){
+    const div=document.createElement('div');div.className='frigo-rangee';
+    div.innerHTML=`<span class="frigo-rangee-label">R${r}</span>`;
+    const slots=document.createElement('div');slots.className='frigo-slots';
+    const cap=caps[r-1];
+    for(let p=1;p<=cap;p++){
+      const slot=data.grille[r]&&data.grille[r][p];
+      const el=document.createElement('div');
+      const cc=slot?COULEUR[slot.couleur]:null;
+      el.className='frigo-slot'+(slot?' '+(cc?.cls||'no-color'):'  vide');
+      if(slot){
+        el.innerHTML=`<div class="frigo-slot-dom">${slot.domaine||'?'}</div><div class="frigo-slot-btl">${slot.millesime||''}</div>`;
+        el.title=`${slot.domaine} — ${slot.appellation||''} ${slot.millesime||''}`;
+        el.onclick=()=>showFrigoPopup(slot);
+      }
+      slots.appendChild(el);
+    }
+    div.appendChild(slots);
+    container.appendChild(div);
+  }
+}
+async function showFrigoPopup(slot){
+  const cc=COULEUR[slot.couleur];
+  const pret=isPret(slot);
+  const bap=slot.boire_a_partir?`<br><span class="lbl">Boire à partir de :</span> <span style="color:#80e8a0">${slot.boire_a_partir}</span>`:'';
+  const notes=slot.notes?`<br><span class="lbl">Notes :</span> <em style="color:var(--muted)">${slot.notes}</em>`:'';
+  document.getElementById('frigo-popup-content').innerHTML=`
+    <div class="popup-domaine" style="color:#80c8ff">${cc?cc.icon+' ':''} ${slot.domaine||'—'}${pret?' <span style="color:#80e8a0">✓</span>':''}</div>
+    <div class="popup-detail">
+      <span class="lbl">Appellation :</span> ${slot.appellation||'—'}${slot.cuvee?` — <em>${slot.cuvee}</em>`:''}<br>
+      <span class="lbl">Millésime :</span> ${slot.millesime||'—'}${bap}<br>
+      <span class="lbl">Quantité :</span> <strong style="color:var(--gold)">${slot.quantite}</strong> btl
+      ${slot.prix_unit?`<br><span class="lbl">Prix/u :</span> ${parseFloat(slot.prix_unit).toFixed(2)} €`:''}${notes}
+    </div>`;
+
+  // Chercher si ce vin existe déjà en cave
+  const [emps, sameWine] = await Promise.all([
+    fetch('/api/emplacements_libres').then(r=>r.json()),
+    fetch(`/api/frigo/${slot.id}/same_wine_cave`).then(r=>r.json())
+  ]);
+
+  let autoInfo='';
+  let previewHtml='';
+  if(sameWine && sameWine.loge_id){
+    const lbl=`M${sameWine.mur}-C${sameWine.col_beton}-B${sameWine.bloc}-${LOGE_LABELS[sameWine.loge]}`;
+    autoInfo=`<div style="margin-top:.5rem;font-size:.78rem;color:#80e8a0;background:rgba(40,160,80,.1);border:1px solid rgba(70,200,110,.3);border-radius:6px;padding:.4rem .6rem">
+      ✓ Ce vin est déjà en cave (${lbl}, ${sameWine.quantite} btl) — sera ajouté automatiquement
+    </div>`;
+    if(caveData){
+      const lids=new Set([sameWine.loge_id]);
+      previewHtml=`<div class="emp-preview" style="display:block;margin-top:.5rem">
+        <div class="emp-preview-title">📍 Rejoindra — Mur ${sameWine.mur}</div>
+        <div>${renderMiniCaveHtml(sameWine.mur, lids)}</div>
+      </div>`;
+    }
+  }
+
+  // Dropdown custom avec hover-preview pour le choix d'emplacement
+  let cibleHtml='';
+  if(!sameWine){
+    const optItems=emps.slice(0,80).map(e=>`
+      <div class="emp-dropdown-item" data-lid="${e.loge_id}" data-mur="${e.mur||0}"
+        onmouseenter="hoverFrigoEmp('${e.loge_id}',${e.mur||0})"
+        onmouseleave="unhoverFrigoEmp()"
+        onclick="selectFrigoEmp('${e.loge_id}','${e.label.replace(/'/g,"\\'")}')">
+        <span>${e.label}</span>
+        <span class="emp-item-badge">M${e.mur} C${e.col_beton}</span>
+      </div>`).join('');
+    cibleHtml=`
+      <div class="emp-dropdown" id="frigo-cible-dd" style="flex:1;min-width:180px">
+        <button type="button" class="emp-dropdown-btn" id="frigo-cible-btn" onclick="toggleFrigoCibleDd()">
+          <span id="frigo-cible-label">— Choisir emplacement —</span>
+          <span class="arrow">▾</span>
+        </button>
+        <div class="emp-dropdown-list" id="frigo-cible-list">${optItems}</div>
+      </div>`;
+  }
+
+  document.getElementById('frigo-popup-actions').innerHTML=`
+    <div style="width:100%">
+      ${autoInfo}
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem;align-items:flex-start">
+        <button class="btn-sortir" onclick="sortirFrigo(${slot.id})">🗑 Bue</button>
+        ${cibleHtml}
+        <button class="btn-edit-popup" onclick="retourCave(${slot.id},${sameWine?'true':'false'})">↩ Cave</button>
+      </div>
+    </div>`;
+  // Afficher aperçu cave dans le panneau flottant séparé
+  if(previewHtml) showFrigoCavePreview(previewHtml, sameWine?'📍 Rejoindra — Mur '+sameWine.mur:'📍 Emplacement');
+  else hideFrigoCavePreview();
+  document.getElementById('frigo-popup').style.display='block';
+  document.getElementById('popup-backdrop').classList.add('open');
+}
+
+let _frigoCibleSelected='';
+function toggleFrigoCibleDd(){
+  const list=document.getElementById('frigo-cible-list');
+  const btn=document.getElementById('frigo-cible-btn');
+  if(!list)return;
+  const isOpen=list.classList.contains('open');
+  list.classList.remove('open','open-up');
+  btn.classList.remove('open');
+  if(!isOpen){
+    list.classList.add('open');
+    btn.classList.add('open');
+    const rect=list.getBoundingClientRect();
+    if(rect.bottom>window.innerHeight-20){list.classList.add('open-up');}
+  }
+}
+function selectFrigoEmp(lid,label){
+  _frigoCibleSelected=lid;
+  const lbl=document.getElementById('frigo-cible-label');
+  const btn=document.getElementById('frigo-cible-btn');
+  const list=document.getElementById('frigo-cible-list');
+  if(lbl)lbl.textContent=label;
+  if(btn)btn.dataset.value=lid;
+  list?.classList.remove('open');btn?.classList.remove('open');
+  // Show preview
+  hoverFrigoEmp(lid, parseInt(lid.match(/M(\d+)/)?.[1]||0));
+}
+function hoverFrigoEmp(lid,mur){
+  if(!caveData||!lid||!mur)return;
+  const lids=new Set([lid]);
+  const html=`<div>${renderMiniCaveHtml(mur,lids)}</div>`;
+  showFrigoCavePreview(html,'📍 Aperçu — Mur '+mur);
+}
+function unhoverFrigoEmp(){
+  if(_frigoCibleSelected){
+    const mur=parseInt(_frigoCibleSelected.match(/M(\d+)/)?.[1]||0);
+    hoverFrigoEmp(_frigoCibleSelected,mur);
+  } else {
+    hideFrigoCavePreview();
+  }
+}
+function showFrigoCavePreview(html,title){
+  const p=document.getElementById('frigo-cave-preview');
+  document.getElementById('frigo-preview-title').textContent=title||'📍 Aperçu';
+  document.getElementById('frigo-preview-body').innerHTML=html;
+  p.style.display='block';
+}
+function hideFrigoCavePreview(){
+  document.getElementById('frigo-cave-preview').style.display='none';
+  document.getElementById('frigo-preview-body').innerHTML='';
+}
+function closeFrigoPopup(){document.getElementById('frigo-popup').style.display='none';document.getElementById('popup-backdrop').classList.remove('open');hideFrigoCavePreview();_frigoCibleSelected='';}
+document.addEventListener('click',e=>{
+  const p=document.getElementById('frigo-popup');
+  if(p&&p.style.display!=='none'&&!p.contains(e.target)&&!e.target.closest('.frigo-slot')&&window.innerWidth>900)closeFrigoPopup();
+});
+async function sortirFrigo(fid){
+  await fetch(`/api/frigo/${fid}/sortir`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+  closeFrigoPopup();
+  showToast('🍷 Bouteille marquée comme bue');
+  loadCasiers();loadVins();loadStats();
+}
+async function retourCave(fid, autoPlace=false){
+  const lid=autoPlace?null:(_frigoCibleSelected||document.getElementById('frigo-cible-btn')?.dataset.value||null);
+  if(!autoPlace&&!lid){alert('Choisissez un emplacement de destination');return;}
+  const r=await fetch(`/api/frigo/${fid}/retour_cave`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({loge_id:lid})});
+  const res=await r.json();
+  if(r.ok){
+    _frigoCibleSelected='';
+    closeFrigoPopup();
+    showToast(res.auto_placed?`↩ Remise en cave automatiquement`:`↩ Remise en cave`);
+    await loadCasiers();
+    await loadVins();
+    loadStats();
+  } else alert(res.error||'Erreur');
+}
+
+// ── ALERTES ─────────────────────────────────────────────────────────────────
+async function loadAlertes(){
+  const data=await(await fetch('/api/vins?alerte=1&sort=boire_a_partir')).json();
+  const cont=document.getElementById('alertes-container');
+  if(!data.length){cont.innerHTML='<div class="empty-state">🎉 Aucun vin prêt à boire</div>';return;}
+  const pretList=data.filter(v=>isPret(v));
+  let html='';
+  if(pretList.length){
+    html+=`<div class="alertes-section-title pret">✓ Prêts à boire — ${pretList.length} référence(s)</div><div class="alertes-list">`;
+    pretList.forEach(v=>{
+      const dep=ANNEE-v.boire_a_partir;
+      const lbl=dep===0?'Prêt cette année !':dep>0?`Prêt depuis ${dep} an${dep>1?'s':''}`:'';
+      const cc=COULEUR[v.couleur];
+      html+=`<div class="alerte-item pret" onclick="selectVin(${v.id});showView('inventaire',document.querySelector('.nav-tab'))">
+        <div class="alerte-info">
+          <div class="alerte-domaine">${cc?cc.icon+' ':''}<strong>${v.domaine}</strong></div>
+          <div class="alerte-app">${v.appellation||''} ${v.millesime?'· '+v.millesime:''} · ${v.quantite} btl</div>
+        </div>
+        <div class="alerte-date"><div class="alerte-annee">${v.boire_a_partir}</div><div class="alerte-reste">${lbl}</div></div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  cont.innerHTML=html||'<div class="empty-state">🎉 Aucun vin prêt à boire</div>';
+}
+
+// ── EMPLACEMENTS DYNAMIQUES + DROPDOWN HOVER-PREVIEW ───────────────────────
+function nbSlots(qte){return Math.max(1,Math.ceil(qte/6));}
+
+function buildEmpSlots(n,currentLids=[]){
+  const container=document.getElementById('emp-slots');
+  container.innerHTML='';
+  document.getElementById('emp-slots-label').textContent=n>1?`(${n} loges — max 6 btl chacune)`:'(max 6 btl)';
+  for(let i=0;i<n;i++){
+    const maxBtl=Math.min(6,parseInt(document.getElementById('f-quantite').value||0)-i*6);
+    const div=document.createElement('div');div.className='emp-slot-row';
+    div.innerHTML=`
+      <div>
+        <div class="emp-slot">
+          <span class="emp-slot-label">Loge ${i+1} (≤${maxBtl} btl)</span>
+          <div class="emp-dropdown" id="empdd-${i}">
+            <button type="button" class="emp-dropdown-btn" onclick="toggleEmpDropdown(${i})" id="empdd-btn-${i}">
+              <span id="empdd-label-${i}">— Libre —</span>
+              <span class="arrow">▾</span>
+            </button>
+            <div class="emp-dropdown-list" id="empdd-list-${i}"></div>
+          </div>
+        </div>
+        <div class="emp-slot-info" id="emp-info-${i}"></div>
+      </div>
+      <div class="emp-slot-preview-inline" id="emp-preview-inline-${i}" style="display:none">
+        <div class="emp-preview" style="display:block;width:200px">
+          <div class="emp-preview-title">📍 Aperçu</div>
+          <div id="emp-preview-inline-content-${i}"></div>
+        </div>
+      </div>`;
+    container.appendChild(div);
+    fillEmpDropdown(i, currentLids[i]||'');
+  }
+  updateEmpPreview();
+}
+
+// Valeur courante par slot index
+function getEmpValue(i){return document.getElementById(`empdd-btn-${i}`)?.dataset.value||'';}
+
+function fillEmpDropdown(slotIdx, selectedLid=''){
+  const usedByOthers=new Set();
+  const n=nbSlots(parseInt(document.getElementById('f-quantite').value||1));
+  for(let j=0;j<n;j++){if(j===slotIdx)continue;const v=getEmpValue(j);if(v)usedByOthers.add(v);}
+  const list=document.getElementById(`empdd-list-${slotIdx}`);
+  const btn=document.getElementById(`empdd-btn-${slotIdx}`);
+  if(!list||!btn)return;
+  const available=[{loge_id:'',label:'— Libre —',mur:0},...empsLibres.filter(e=>!usedByOthers.has(e.loge_id))];
+  // Ajouter l'emplacement actuel s'il n'est pas dans la liste
+  if(selectedLid&&!available.find(e=>e.loge_id===selectedLid)){
+    const ce=currentEmps.find(e=>e.loge_id===selectedLid);
+    if(ce)available.splice(1,0,{...ce,label:ce.label+' (actuel)',_current:true});
+  }
+  list.innerHTML=available.map(e=>{
+    const sel=e.loge_id===selectedLid?'selected':'';
+    const cur=e._current?'current':'';
+    const badge=e.mur?`<span class="emp-item-badge">M${e.mur} C${e.col_beton}</span>`:'';
+    const semiBadge=e.semi_occupe?`<span class="emp-item-semi">${e.qte_actuelle}btl · ${e.place_restante}pl</span>`:'';
+    return`<div class="emp-dropdown-item ${sel} ${cur}" data-lid="${e.loge_id}" data-mur="${e.mur||0}"
+      onmouseenter="hoverEmpItem(${slotIdx},'${e.loge_id}',${e.mur||0})"
+      onmouseleave="unhoverEmpItem(${slotIdx})"
+      onclick="selectEmpItem(${slotIdx},'${e.loge_id}','${e.label.replace(/'/g,"\\'")}')">
+      <span>${e.label}${semiBadge}</span>${badge}
+    </div>`;
+  }).join('');
+  // Mettre à jour le bouton
+  const chosen=available.find(e=>e.loge_id===selectedLid);
+  btn.dataset.value=selectedLid;
+  document.getElementById(`empdd-label-${slotIdx}`).textContent=chosen?.label||'— Libre —';
+  if(selectedLid)showEmpInlinePreview(slotIdx,selectedLid);
+  else{const pv=document.getElementById(`emp-preview-inline-${slotIdx}`);if(pv)pv.style.display='none';}
+}
+
+function toggleEmpDropdown(i){
+  const list=document.getElementById(`empdd-list-${i}`);
+  const btn=document.getElementById(`empdd-btn-${i}`);
+  const isOpen=list.classList.contains('open');
+  // Fermer tous
+  document.querySelectorAll('.emp-dropdown-list').forEach(l=>{l.classList.remove('open');l.classList.remove('open-up');});
+  document.querySelectorAll('.emp-dropdown-btn').forEach(b=>b.classList.remove('open'));
+  if(!isOpen){
+    list.classList.add('open');
+    btn.classList.add('open');
+    // Vérifier si la liste dépasse en bas → ouvrir vers le haut
+    const rect=list.getBoundingClientRect();
+    if(rect.bottom>window.innerHeight-20){list.classList.add('open-up');}
+  }
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.emp-dropdown'))
+    document.querySelectorAll('.emp-dropdown-list').forEach(l=>l.classList.remove('open'));
+});
+
+function selectEmpItem(i,lid,label){
+  const btn=document.getElementById(`empdd-btn-${i}`);
+  const list=document.getElementById(`empdd-list-${i}`);
+  btn.dataset.value=lid;
+  document.getElementById(`empdd-label-${i}`).textContent=label||'— Libre —';
+  list.classList.remove('open');btn.classList.remove('open');
+  // Mettre à jour selected dans la liste
+  list.querySelectorAll('.emp-dropdown-item').forEach(el=>{
+    el.classList.toggle('selected',el.dataset.lid===lid);
+  });
+  // Sync autres dropdowns (exclusion croisée)
+  const n=nbSlots(parseInt(document.getElementById('f-quantite').value||1));
+  for(let j=0;j<n;j++){if(j===i)continue;fillEmpDropdown(j,getEmpValue(j));}
+  // Preview
+  if(lid)showEmpInlinePreview(i,lid);
+  else{const pv=document.getElementById(`emp-preview-inline-${i}`);if(pv)pv.style.display='none';}
+  updateEmpPreview();
+}
+
+function hoverEmpItem(slotIdx,lid,mur){
+  if(!lid||!mur||!caveData)return;
+  showEmpInlinePreview(slotIdx,lid,true);
+}
+function unhoverEmpItem(slotIdx){
+  // Si rien de sélectionné, cacher ; sinon garder la sélection affichée
+  const val=getEmpValue(slotIdx);
+  if(!val){const pv=document.getElementById(`emp-preview-inline-${slotIdx}`);if(pv)pv.style.display='none';}
+  else showEmpInlinePreview(slotIdx,val);
+}
+
+function showEmpInlinePreview(slotIdx,lid,isHover=false){
+  if(!caveData||!lid)return;
+  const parts=lid.match(/M(\d+)/);if(!parts)return;
+  const mur=parseInt(parts[1]);
+  const lids=new Set([lid]);
+  const content=document.getElementById(`emp-preview-inline-content-${slotIdx}`);
+  const wrapper=document.getElementById(`emp-preview-inline-${slotIdx}`);
+  if(!content||!wrapper)return;
+  content.innerHTML=renderMiniCaveHtml(mur,lids);
+  wrapper.style.display='block';
+}
+
+function updateEmpInfo(slotIdx){
+  const val=getEmpValue(slotIdx);
+  const info=document.getElementById(`emp-info-${slotIdx}`);
+  if(!info)return;
+  const e=empsLibres.find(x=>x.loge_id===val)||currentEmps.find(x=>x.loge_id===val);
+  info.textContent=e&&e.mur?`→ Mur ${e.mur}, Col ${e.col_beton}, Bloc ${e.bloc}, ${LOGE_LABELS[e.loge]}`:'';
+}
+
+document.getElementById('f-quantite').addEventListener('input',function(){
+  const qte=parseInt(this.value)||0;const n=nbSlots(qte);
+  const currentSels=[];
+  for(let i=0;i<20;i++){const v=getEmpValue(i);if(document.getElementById(`empdd-btn-${i}`))currentSels.push(v);else break;}
+  buildEmpSlots(n,currentSels);
+  updateShareSuggestion(qte);
+});
+
+function updateShareSuggestion(qte){
+  const box=document.getElementById('share-suggestion');
+  if(!box)return;
+  const semi=empsLibres.filter(e=>e.semi_occupe && e.place_restante>=qte);
+  if(qte>=1&&qte<=2&&semi.length>0&&!editingId){
+    const items=semi.slice(0,5).map(e=>`
+      <div class="share-case-item" onclick="choisirCasePartagee('${e.loge_id}')">
+        <span>${e.label} <span class="emp-item-semi">${e.qte_actuelle} btl</span></span>
+        <span style="font-size:.72rem;color:var(--muted)">${e.place_restante} place(s)</span>
+      </div>`).join('');
+    box.innerHTML=`<div class="share-suggestion-title">📦 Cases avec de la place (${semi.length})</div>${items}`;
+    box.style.display='block';
+  } else {
+    box.style.display='none';
+  }
+}
+
+async function choisirCasePartagee(logeId){
+  // Sélectionner cet emplacement dans le slot 0
+  const btn=document.getElementById('empdd-btn-0');
+  if(!btn)return;
+  // Simuler la sélection via la liste
+  const e=empsLibres.find(x=>x.loge_id===logeId);
+  if(!e)return;
+  // Injecter dans le dropdown
+  btn.dataset.value=logeId;
+  btn.querySelector('span')||btn;
+  btn.innerHTML=`<span>${e.label} <span class="emp-item-semi">${e.qte_actuelle} btl · ${e.place_restante} restantes</span></span><span style="font-size:.7rem">▼</span>`;
+  document.getElementById('share-suggestion').style.display='none';
+}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');editingId=null;}
+async function openModal(id=null){
+  editingId=id;
+  document.getElementById('modal-title').textContent=id?'Modifier le vin':'Ajouter un vin';
+  document.getElementById('btn-delete').style.display=id?'block':'none';
+  ['domaine','appellation','cuvee','millesime','boire_a_partir','boire_avant','quantite','prix_unit','notes'].forEach(f=>{const el=document.getElementById('f-'+f);if(el)el.value='';});
+  document.getElementById('f-couleur').value='';
+  document.getElementById('emp-preview').style.display='none';
+  document.querySelectorAll('.ac-list').forEach(l=>l.style.display='none');
+  empsLibres=await(await fetch('/api/emplacements_libres')).json();
+  currentEmps=[];
+  // Masquer la suggestion de partage par défaut
+  const ss=document.getElementById('share-suggestion');if(ss)ss.style.display='none';
+  if(id){
+    const v=await(await fetch(`/api/vins/${id}`)).json();
+    document.getElementById('f-domaine').value=v.domaine||'';
+    document.getElementById('f-appellation').value=v.appellation||'';
+    document.getElementById('f-cuvee').value=v.cuvee||'';
+    document.getElementById('f-millesime').value=v.millesime||'';
+    document.getElementById('f-boire_a_partir').value=v.boire_a_partir||'';
+    document.getElementById('f-boire_avant').value=v.boire_avant||'';
+    document.getElementById('f-couleur').value=v.couleur||'';
+    document.getElementById('f-notes').value=v.notes||'';
+    const membres=await(await fetch(`/api/vins/${id}/groupe`)).json();
+    const totalQte=membres.reduce((s,m)=>s+m.quantite,0);
+    document.getElementById('f-quantite').value=totalQte;
+    document.getElementById('f-prix_unit').value=v.prix_unit||'';
+    currentEmps=membres.filter(m=>m.loge_id).map(m=>({loge_id:m.loge_id,mur:m.mur,col_beton:m.col_beton,bloc:m.bloc,loge:m.loge,label:`Mur ${m.mur} — Col ${m.col_beton} — Bloc ${m.bloc} — ${LOGE_LABELS[m.loge]}`}));
+    currentEmps.forEach(ce=>{if(!empsLibres.find(e=>e.loge_id===ce.loge_id))empsLibres.unshift(ce);});
+    buildEmpSlots(nbSlots(totalQte),currentEmps.map(e=>e.loge_id));
+  } else {
+    buildEmpSlots(1,[]);
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+async function saveVin(){
+  const dom=document.getElementById('f-domaine').value.trim();
+  const qte_str=document.getElementById('f-quantite').value;
+  const coul=document.getElementById('f-couleur').value;
+  if(!dom){alert('Le domaine est obligatoire');return;}
+  if(!qte_str){alert('Le nombre de bouteilles est obligatoire');return;}
+  if(!coul){alert('La couleur est obligatoire');return;}
+  const qte=parseInt(qte_str)||0;
+  const n=nbSlots(qte);const loges=[];
+  for(let i=0;i<n;i++){const v=getEmpValue(i);if(v)loges.push(v);}
+  const data={domaine:dom,appellation:document.getElementById('f-appellation').value.trim(),cuvee:document.getElementById('f-cuvee').value.trim(),millesime:document.getElementById('f-millesime').value.trim(),couleur:coul,boire_a_partir:document.getElementById('f-boire_a_partir').value||null,boire_avant:document.getElementById('f-boire_avant').value||null,quantite:qte,prix_unit:parseFloat(document.getElementById('f-prix_unit').value)||0,notes:document.getElementById('f-notes').value.trim(),loges};
+
+  // Cas spécial : 1 loge semi-occupée + pas en mode édition → partager la case
+  if(!editingId && loges.length===1){
+    const emp=empsLibres.find(e=>e.loge_id===loges[0]);
+    if(emp && emp.semi_occupe){
+      const resp=await fetch(`/api/loge/${encodeURIComponent(loges[0])}/partager`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      const result=await resp.json();
+      if(!resp.ok){alert(result.error||'Erreur');return;}
+      closeModal();
+      await loadVins();if(caveData)loadCasiers();loadStats();
+      return;
+    }
+  }
+
+  const url=editingId?`/api/vins/${editingId}`:'/api/vins';
+  const resp=await fetch(url,{method:editingId?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const result=await resp.json();
+  closeModal();selectedVinId=editingId||result.id;
+  await loadVins();if(caveData)loadCasiers();loadStats();
+  if(selectedVinId){const v=await(await fetch(`/api/vins/${selectedVinId}`)).json();if(v.id)renderVinPanel(v);}
+}
+async function deleteVin(){
+  if(!editingId||!confirm('Supprimer ce vin ? Les cases dans la cave seront libérées.'))return;
+  await fetch(`/api/vins/${editingId}`,{method:'DELETE'});
+  closeModal();closeVinPanel();loadVins();if(caveData)loadCasiers();loadStats();
+}
+async function libererCase(vid, evt){
+  evt.stopPropagation();
+  if(!confirm('Libérer cette case ? Les bouteilles non référencées seront supprimées.'))return;
+  await fetch(`/api/vins/${vid}`,{method:'DELETE'});
+  loadVins();if(caveData)loadCasiers();loadStats();
+}
+
+// ── VIVINO DANS MODAL ─────────────────────────────────────────────────────────
+async function modalSearchVivino(){
+  const domaine=document.getElementById('f-domaine').value.trim();
+  const appellation=document.getElementById('f-appellation').value.trim();
+  const millesime=document.getElementById('f-millesime').value.trim();
+  if(!domaine){alert('Renseignez le domaine avant de chercher');return;}
+  const btn=document.getElementById('btn-modal-vivino');
+  const resultDiv=document.getElementById('modal-vivino-result');
+  btn.classList.add('loading');btn.textContent='🔍 Recherche…';
+  resultDiv.style.display='block';
+  resultDiv.innerHTML='<span style="color:var(--muted);font-style:italic">Recherche en cours…</span>';
+  try{
+    const params=new URLSearchParams({domaine,appellation,millesime});
+    const r=await fetch(`/api/vivino_search?${params}`);
+    const data=await r.json();
+    if(!r.ok||data.error){
+      resultDiv.innerHTML='<span style="color:var(--muted)">Aucun résultat trouvé.</span>';
+      btn.classList.remove('loading');btn.textContent='🍷 Réessayer Vivino';
+      return;
+    }
+    // Identifier les champs qu'on peut compléter (seulement si vides dans le formulaire)
+    const fills=[];
+    if(data.producteur&&!document.getElementById('f-domaine').value)
+      fills.push({id:'f-domaine',label:'Domaine',val:data.producteur});
+    if(data.cuvee&&!document.getElementById('f-cuvee').value)
+      fills.push({id:'f-cuvee',label:'Cuvée',val:data.cuvee});
+    if(data.appellation&&!document.getElementById('f-appellation').value)
+      fills.push({id:'f-appellation',label:'Appellation',val:data.appellation});
+    if(data.prix_estime&&!document.getElementById('f-prix_unit').value)
+      fills.push({id:'f-prix_unit',label:'Prix unitaire',val:parseFloat(data.prix_estime)||0});
+    // Afficher résumé
+    const note=data.note_vivino?`<strong style="color:var(--gold)">${data.note_vivino}/5</strong> ${starsHtml(parseFloat(data.note_vivino))} (${Number(data.nb_avis||0).toLocaleString('fr')} avis)`:null;
+    const nomTrouve=data.nom_vin?`<div style="font-size:.8rem;margin:.2rem 0"><span style="color:var(--muted)">Vin trouvé :</span> <strong>${data.nom_vin}${data.millesime_trouve?' '+data.millesime_trouve:''}</strong>${data.region?' — '+data.region:''}</div>`:'';
+    const desc=data.description?`<div style="font-style:italic;color:var(--muted);margin:.3rem 0">${data.description}</div>`:'';
+    const accords=Array.isArray(data.accords_mets)&&data.accords_mets.length
+      ?`<div class="vivino-accords" style="margin:.3rem 0">${data.accords_mets.map(a=>`<span class="vivino-accord">${a}</span>`).join('')}</div>`:'';
+    const nbRes=data.nb_resultats>1?`<div style="font-size:.7rem;color:var(--muted)">${data.nb_resultats} résultats trouvés sur Vivino</div>`:'';
+    let fillsHtml='';
+    if(fills.length){
+      fillsHtml=`<div style="margin-top:.5rem;padding:.4rem .6rem;background:rgba(201,168,76,.07);border-radius:6px;border:1px solid rgba(201,168,76,.2)">
+        <div style="font-size:.72rem;color:var(--muted);margin-bottom:.35rem">Champs à compléter :</div>
+        ${fills.map(f=>`<div style="display:flex;justify-content:space-between;font-size:.8rem;margin:.15rem 0">
+          <span style="color:var(--muted)">${f.label}</span><span style="color:var(--gold)">${f.val}</span>
+        </div>`).join('')}
+        <button type="button" onclick="applyVivinoFills()" style="margin-top:.4rem;padding:.25rem .7rem;background:rgba(201,168,76,.2);border:1px solid rgba(201,168,76,.4);border-radius:5px;color:var(--gold);cursor:pointer;font-size:.78rem">✓ Appliquer ces données</button>
+      </div>`;
+    } else {
+      fillsHtml=`<div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">Tous les champs sont déjà renseignés.</div>`;
+    }
+    // Stocker les fills pour applyVivinoFills
+    window._vivinoFills=fills;
+    resultDiv.innerHTML=`
+      ${nomTrouve}
+      ${note?`<div style="margin-bottom:.3rem">${note}</div>`:''}
+      ${nbRes}${desc}${accords}${fillsHtml}
+      ${data.url_vivino?`<a class="vivino-link" href="${data.url_vivino}" target="_blank">↗ Voir sur Vivino</a>`:''}`;
+    btn.classList.remove('loading');btn.textContent='🔄 Actualiser';
+  }catch(e){
+    resultDiv.innerHTML='<span style="color:var(--muted)">Erreur de connexion.</span>';
+    btn.classList.remove('loading');btn.textContent='🍷 Réessayer';
+  }
+}
+function applyVivinoFills(){
+  if(!window._vivinoFills)return;
+  window._vivinoFills.forEach(f=>{
+    const el=document.getElementById(f.id);
+    if(el&&!el.value)el.value=f.val;
+  });
+  document.getElementById('modal-vivino-result').querySelector('button[onclick="applyVivinoFills()"]')?.remove();
+  const msg=document.createElement('div');
+  msg.style.cssText='font-size:.75rem;color:#80e8a0;margin-top:.3rem';
+  msg.textContent='✓ Données appliquées';
+  document.getElementById('modal-vivino-result').appendChild(msg);
+}
+
+// ── VIVINO POPUP ─────────────────────────────────────────────────────────────
+function openVivinoPopup(){
+  const dom=document.getElementById('f-domaine').value.trim();
+  const app=document.getElementById('f-appellation').value.trim();
+  const mill=document.getElementById('f-millesime').value.trim();
+  const q=[dom,app,mill].filter(Boolean).join(' ');
+  document.getElementById('vivino-q').value=q;
+  document.getElementById('vivino-overlay').classList.add('open');
+  if(q) searchVivino();
+}
+function closeVivinoPopup(){document.getElementById('vivino-overlay').classList.remove('open');}
+
+let vivinoResults=[];
+async function searchVivino(){
+  const q=document.getElementById('vivino-q').value.trim();
+  if(!q)return;
+  const results=document.getElementById('vivino-results');
+  results.innerHTML='<div class="vivino-status">⏳ Recherche en cours…</div>';
+  const mill=q.match(/\b(19|20)\d{2}\b/)?.[0]||'';
+  const apiUrl=`https://www.vivino.com/api/explore/explore?q=${encodeURIComponent(q)}&currency_code=EUR&language=fr&page=1`;
+  // Essayer plusieurs proxies CORS dans l'ordre
+  const proxies=[
+    u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+    u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  ];
+  let data=null;
+  for(let i=0;i<proxies.length;i++){
+    try{
+      const purl=proxies[i](apiUrl);
+      const resp=await fetch(purl,{signal:AbortSignal.timeout(8000)});
+      if(!resp.ok) continue;
+      const raw=await resp.json();
+      // allorigins wraps in {contents:'...'}, corsproxy retourne direct
+      const text=raw.contents!==undefined?raw.contents:JSON.stringify(raw);
+      const parsed=JSON.parse(text);
+      if(parsed.explore_vintage){data=parsed;break;}
+      if(parsed.errors) continue;
+      // codetabs/corsproxy retournent l'objet directement
+      if(parsed.explore_vintage===undefined&&typeof parsed==='object'){
+        // Tenter comme réponse directe
+        data=parsed; break;
+      }
+    }catch(e){console.warn('proxy',i,'failed:',e.message);}
+  }
+  if(!data){
+    results.innerHTML=`<div class="vivino-status">
+      Impossible de récupérer les données Vivino.<br>
+      <a href="https://www.vivino.com/search/wines?q=${encodeURIComponent(q)}" target="_blank" 
+         style="color:var(--gold);display:inline-block;margin-top:.5rem">↗ Ouvrir Vivino directement</a>
+    </div>`;
+    return;
+  }
+  const matches=(data.explore_vintage?.matches)||[];
+  if(!matches.length){
+    results.innerHTML=`<div class="vivino-status">Aucun résultat pour "<em>${q}</em>".<br>
+      <a href="https://www.vivino.com/search/wines?q=${encodeURIComponent(q)}" target="_blank" 
+         style="color:var(--gold);display:inline-block;margin-top:.5rem">↗ Voir sur Vivino</a></div>`;
+    return;
+  }
+  vivinoResults=matches.map(m=>{
+    const v=m.vintage||{};const w=v.wine||{};const st=v.statistics||{};const wst=w.statistics||{};
+    return{
+      producteur:w.winery?.name||'',
+      nom_vin:w.name||'',
+      appellation:w.region?.name||'',
+      millesime_trouve:String(v.year||''),
+      note_vivino:st.ratings_average||wst.ratings_average||null,
+      nb_avis:st.ratings_count||wst.ratings_count||null,
+      prix_estime:m.price?.amount?Math.round(m.price.amount*100)/100:null,
+      url_vivino:w.seo_name?`https://www.vivino.com/wines/${w.seo_name}`:null,
+      couleur_hint:w.type_id,
+    };
+  });
+  renderVivinoResults(vivinoResults);
+}
+
+function renderVivinoResults(wines){
+  const results=document.getElementById('vivino-results');
+  if(!wines.length){results.innerHTML='<div class="vivino-status">Aucun résultat</div>';return;}
+  results.innerHTML=wines.slice(0,8).map((w,i)=>{
+    const note=w.note_vivino?`⭐ ${parseFloat(w.note_vivino).toFixed(1)}/5`:'';
+    const nb=w.nb_avis?`<span style="color:var(--muted)">(${parseInt(w.nb_avis).toLocaleString('fr')} avis)</span>`:'';
+    const prix=w.prix_estime?`· ~${w.prix_estime} €`:'';
+    const mill=w.millesime_trouve?` ${w.millesime_trouve}`:'';
+    return`<div class="vivino-result-item" onclick="toggleVivinoSelect(${i})">
+      <div class="vivino-wine-info">
+        <div class="vivino-wine-name">${w.producteur||w.nom_vin}</div>
+        <div class="vivino-wine-meta">${w.nom_vin||''} ${mill} ${prix}</div>
+        <div class="vivino-wine-stats">${note} ${nb}</div>
+      </div>
+      <button class="vivino-import-btn" onclick="event.stopPropagation();importVivinoWine(${i})">↗ Importer</button>
+    </div>`;
+  }).join('');
+}
+
+function toggleVivinoSelect(idx){
+  document.querySelectorAll('.vivino-result-item').forEach((el,i)=>el.classList.toggle('selected',i===idx));
+}
+
+const VIVINO_COULEUR={1:'rouge',2:'blanc',3:'champagne',4:'rose',7:'porto'};
+function importVivinoWine(idx){
+  const w=vivinoResults[idx];
+  if(!w)return;
+  if(w.producteur) document.getElementById('f-domaine').value=w.producteur;
+  if(w.appellation&&!document.getElementById('f-appellation').value)
+    document.getElementById('f-appellation').value=w.appellation;
+  if(w.millesime_trouve&&!document.getElementById('f-millesime').value)
+    document.getElementById('f-millesime').value=w.millesime_trouve;
+  if(w.prix_estime&&!document.getElementById('f-prix_unit').value)
+    document.getElementById('f-prix_unit').value=w.prix_estime;
+  if(w.couleur_hint&&VIVINO_COULEUR[w.couleur_hint]&&!document.getElementById('f-couleur').value)
+    document.getElementById('f-couleur').value=VIVINO_COULEUR[w.couleur_hint];
+  const notesEl=document.getElementById('f-notes');
+  if(w.note_vivino&&notesEl&&!notesEl.value)
+    notesEl.value=`Vivino: ${parseFloat(w.note_vivino).toFixed(1)}/5${w.nb_avis?' ('+parseInt(w.nb_avis).toLocaleString('fr')+' avis)':''}`;
+  closeVivinoPopup();
+  const btn=document.querySelector('.btn-vivino-open');
+  if(btn){const orig=btn.innerHTML;btn.innerHTML='✓ Données importées';btn.style.background='rgba(40,160,80,.3)';setTimeout(()=>{btn.innerHTML=orig;btn.style.background='';},2500);}
+}
+
+
+function showToast(msg,duration=2200){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),duration);
+}
+
+// Init
+fetch('/api/cave_structure').then(r=>r.json()).then(d=>{caveData=d;});
+loadVins(); loadStats();
+
+</script>
+{% endraw %}
+</body>
+</html>
