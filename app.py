@@ -15,11 +15,12 @@ if USE_PG:
     if DATABASE_URL.startswith('postgres://'):
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
     def get_db():
-        conn = psycopg2.connect(DATABASE_URL)
+        conn = psycopg2.connect(DATABASE_URL,
+            cursor_factory=psycopg2.extras.RealDictCursor)
         conn.autocommit = False
         return conn
-    def fetchone(cur): return cur.fetchone()
-    def fetchall(cur): return cur.fetchall()
+    def fetchone(cur): r = cur.fetchone(); return dict(r) if r else None
+    def fetchall(cur): rows = cur.fetchall(); return [dict(r) for r in rows]
     def lastid(cur): cur.execute('SELECT lastval()'); return cur.fetchone()[0]
     PH = '%s'   # placeholder PostgreSQL
 else:
@@ -35,22 +36,46 @@ else:
     PH = '?'    # placeholder SQLite
 
 def q(sql):
-    """Remplace ? par %s si PostgreSQL."""
-    return sql.replace('?', PH) if USE_PG else sql
+    """Remplace ? par %s si PostgreSQL, et ajoute RETURNING id sur les INSERT pour PG."""
+    sql2 = sql.replace('?', PH) if USE_PG else sql
+    return sql2
+
+def q_insert(sql):
+    """Comme q() mais ajoute RETURNING id pour PG."""
+    sql2 = sql.replace('?', PH) if USE_PG else sql
+    if USE_PG and sql2.strip().upper().startswith('INSERT'):
+        sql2 = sql2.rstrip() + ' RETURNING id'
+    return sql2
 
 def row2dict(row):
     if row is None: return None
-    if USE_PG: return dict(row)
     return dict(row)
+
+def get_id(row): return row['id'] if USE_PG else row[0]
 
 def rows2list(rows):
     return [dict(r) for r in rows] if rows else []
 
 def ex(conn, sql, params=()):
     """Execute avec placeholders adaptés."""
-    cur = conn.cursor()
+    if USE_PG:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    else:
+        cur = conn.cursor()
     cur.execute(q(sql), params)
     return cur
+
+def ex_ins(conn, sql, params=()):
+    """INSERT — retourne (cursor, new_id)."""
+    if USE_PG:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(q_insert(sql), params)
+        row = cur.fetchone()
+        return cur, (dict(row)['id'] if row else None)
+    else:
+        cur = conn.cursor()
+        cur.execute(q(sql), params)
+        return cur, cur.lastrowid
 
 # ── INIT DB ────────────────────────────────────────────────────────────────
 def init_db():
@@ -327,23 +352,23 @@ def add_vin():
                 ex(conn,'''UPDATE vins SET domaine=?,appellation=?,cuvee=?,millesime=?,boire_a_partir=?,
                     boire_avant=?,couleur=?,prix_unit=?,quantite=?,bottles_haut=?,bottles_bas=?,notes=?,groupe_id=? WHERE id=?''',
                     (data['domaine'],data.get('appellation',''),data.get('cuvee',''),data.get('millesime',''),bap,ba,
-                     data.get('couleur',''),prix,qte_loge,bh,bb,data.get('notes',''),groupe_id,ex_row[0]))
-                if not first_id: first_id=ex_row[0]
+                     data.get('couleur',''),prix,qte_loge,bh,bb,data.get('notes',''),groupe_id,get_id(ex_row)))
+                if not first_id: first_id=get_id(ex_row)
             else:
-                cur=ex(conn,'''INSERT INTO vins (loge_id,mur,col_beton,bloc,loge,domaine,appellation,cuvee,
+                cur,_ins_id=ex_ins(conn,'''INSERT INTO vins (loge_id,mur,col_beton,bloc,loge,domaine,appellation,cuvee,
                     millesime,boire_a_partir,boire_avant,couleur,prix_unit,quantite,bottles_haut,bottles_bas,notes,groupe_id)
                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                     (lid,mur,col,bloc,loge,data['domaine'],data.get('appellation',''),data.get('cuvee',''),data.get('millesime',''),
                      bap,ba,data.get('couleur',''),prix,qte_loge,bh,bb,data.get('notes',''),groupe_id))
-                if not first_id: first_id=lastid(cur); cur.close()
+                if not first_id: first_id=_ins_id; cur.close()
     else:
         bh,bb=bottles_from_qte(qte)
-        cur=ex(conn,'''INSERT INTO vins (loge_id,mur,col_beton,bloc,loge,domaine,appellation,cuvee,
+        cur,_ins_id=ex_ins(conn,'''INSERT INTO vins (loge_id,mur,col_beton,bloc,loge,domaine,appellation,cuvee,
             millesime,boire_a_partir,boire_avant,couleur,prix_unit,quantite,bottles_haut,bottles_bas,notes)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
             (None,0,0,0,0,data['domaine'],data.get('appellation',''),data.get('cuvee',''),data.get('millesime',''),
              bap,ba,data.get('couleur',''),prix,qte,bh,bb,data.get('notes','')))
-        first_id=lastid(cur); cur.close()
+        first_id=_ins_id; cur.close()
     conn.commit(); conn.close()
     return jsonify({'id':first_id,'message':'Ajouté'}),201
 
@@ -372,15 +397,15 @@ def update_vin(vid):
                 ex(conn,'''UPDATE vins SET domaine=?,appellation=?,cuvee=?,millesime=?,boire_a_partir=?,
                     boire_avant=?,couleur=?,prix_unit=?,quantite=?,bottles_haut=?,bottles_bas=?,notes=?,groupe_id=? WHERE id=?''',
                     (data['domaine'],data.get('appellation',''),data.get('cuvee',''),data.get('millesime',''),bap,ba,
-                     data.get('couleur',''),prix,qte_loge,bh,bb,data.get('notes',''),new_grp,ex_row[0]))
-                if not first_id: first_id=ex_row[0]
+                     data.get('couleur',''),prix,qte_loge,bh,bb,data.get('notes',''),new_grp,get_id(ex_row)))
+                if not first_id: first_id=get_id(ex_row)
             else:
-                cur=ex(conn,'''INSERT INTO vins (loge_id,mur,col_beton,bloc,loge,domaine,appellation,cuvee,
+                cur,_ins_id=ex_ins(conn,'''INSERT INTO vins (loge_id,mur,col_beton,bloc,loge,domaine,appellation,cuvee,
                     millesime,boire_a_partir,boire_avant,couleur,prix_unit,quantite,bottles_haut,bottles_bas,notes,groupe_id)
                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                     (lid,mur,col,bloc,loge,data['domaine'],data.get('appellation',''),data.get('cuvee',''),data.get('millesime',''),
                      bap,ba,data.get('couleur',''),prix,qte_loge,bh,bb,data.get('notes',''),new_grp))
-                if not first_id: first_id=lastid(cur); cur.close()
+                if not first_id: first_id=_ins_id; cur.close()
     else:
         if grp:
             cur=ex(conn,'SELECT id,quantite FROM vins WHERE groupe_id=? ORDER BY id',(grp,))
@@ -469,13 +494,13 @@ def partager_loge(loge_id):
     bap=int(data['boire_a_partir']) if data.get('boire_a_partir') else None
     ba=int(data['boire_avant']) if data.get('boire_avant') else None
     bh,bb=bottles_from_qte(qte)
-    cur=ex(conn,'''INSERT INTO vins (loge_id,mur,col_beton,bloc,loge,domaine,appellation,cuvee,
+    cur,_ins_id=ex_ins(conn,'''INSERT INTO vins (loge_id,mur,col_beton,bloc,loge,domaine,appellation,cuvee,
         millesime,boire_a_partir,boire_avant,couleur,prix_unit,quantite,bottles_haut,bottles_bas,notes,loge_slot)
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
         (loge_id,mur,col,bloc,loge,data['domaine'],data.get('appellation',''),data.get('cuvee',''),
          data.get('millesime',''),bap,ba,data.get('couleur',''),float(data.get('prix_unit',0) or 0),
          qte,bh,bb,data.get('notes',''),max_slot+1))
-    new_id=lastid(cur); cur.close()
+    new_id=_ins_id; cur.close()
     conn.commit(); conn.close()
     return jsonify({'id':new_id,'message':'Vin ajouté dans la case'}),201
 
@@ -517,12 +542,12 @@ def transferer_vers_frigo():
         ex(conn,'UPDATE vins SET quantite=?,bottles_haut=?,bottles_bas=? WHERE id=?',(nqte,bh,bb,vin_id))
     frigo_ids=[]
     for slot in slots:
-        cur=ex(conn,'''INSERT INTO frigo (rangee,position,domaine,appellation,cuvee,millesime,couleur,
+        cur,_ins_id=ex_ins(conn,'''INSERT INTO frigo (rangee,position,domaine,appellation,cuvee,millesime,couleur,
             boire_a_partir,boire_avant,prix_unit,quantite,notes,source_loge_id,source_vin_id)
             VALUES (?,?,?,?,?,?,?,?,?,?,1,?,?,?)''',
             (slot[0],slot[1],row['domaine'],row['appellation'],cuvee_val,row['millesime'],row['couleur'],
              row['boire_a_partir'],row['boire_avant'],row['prix_unit'],row['notes'],row['loge_id'],vin_id))
-        frigo_ids.append(lastid(cur)); cur.close()
+        frigo_ids.append(_ins_id); cur.close()
     conn.commit(); conn.close()
     return jsonify({'message':f'{nb} btl transférée(s) au frigo','frigo_ids':frigo_ids})
 
