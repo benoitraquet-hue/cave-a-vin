@@ -51,18 +51,15 @@ def q_insert(sql):
 
 def row2dict(row):
     if row is None: return None
-    try: return dict(row)
-    except: return row
+    if isinstance(row, dict): return row        # déjà un dict (PG)
+    return dict(row)                             # sqlite3.Row
 
 def get_id(row): return row['id'] if USE_PG else row[0]
 
 def rows2list(rows):
     if not rows: return []
-    result = []
-    for r in rows:
-        try: result.append(dict(r))
-        except: result.append(r)
-    return result
+    if isinstance(rows[0], dict): return list(rows)   # déjà des dicts (PG)
+    return [dict(r) for r in rows]                     # sqlite3.Row
 
 def ex(conn, sql, params=()):
     """Execute avec placeholders adaptés."""
