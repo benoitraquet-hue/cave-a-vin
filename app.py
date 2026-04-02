@@ -11,7 +11,6 @@ USE_PG = bool(DATABASE_URL)
 if USE_PG:
     import psycopg2
     import psycopg2.extras
-    # Railway fournit postgres:// mais psycopg2 veut postgresql://
     if DATABASE_URL.startswith('postgres://'):
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
     def get_db():
@@ -19,10 +18,13 @@ if USE_PG:
             cursor_factory=psycopg2.extras.RealDictCursor)
         conn.autocommit = False
         return conn
-    def fetchone(cur): r = cur.fetchone(); return dict(r) if r else None
-    def fetchall(cur): rows = cur.fetchall(); return [dict(r) for r in rows]
-    def lastid(cur): cur.execute('SELECT lastval()'); return cur.fetchone()[0]
-    PH = '%s'   # placeholder PostgreSQL
+    def fetchone(cur):
+        r = cur.fetchone()
+        return {k: v for k, v in r.items()} if r else None
+    def fetchall(cur):
+        return [{k: v for k, v in r.items()} for r in cur.fetchall()]
+    def lastid(cur): cur.execute('SELECT lastval()'); return cur.fetchone()['lastval']
+    PH = '%s'
 else:
     import sqlite3
     DB = os.path.join(os.path.dirname(__file__), 'cave.db')
@@ -49,12 +51,18 @@ def q_insert(sql):
 
 def row2dict(row):
     if row is None: return None
-    return dict(row)
+    try: return dict(row)
+    except: return row
 
 def get_id(row): return row['id'] if USE_PG else row[0]
 
 def rows2list(rows):
-    return [dict(r) for r in rows] if rows else []
+    if not rows: return []
+    result = []
+    for r in rows:
+        try: result.append(dict(r))
+        except: result.append(r)
+    return result
 
 def ex(conn, sql, params=()):
     """Execute avec placeholders adaptés."""
